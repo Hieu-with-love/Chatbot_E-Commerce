@@ -1,0 +1,10 @@
+# Copy this file to local.properties and add your actual API keys
+# This file is a template and should be committed to git
+# local.properties should NOT be committed to git
+
+# SDK location - will be different for each developer
+sdk.dir=/path/to/your/android/sdk
+
+# API Keys - Add your actual keys in local.properties, not here
+MODEL_NAME = gemini-2.0-flash
+API_KEY = YOUR_API_KEY_HERE
