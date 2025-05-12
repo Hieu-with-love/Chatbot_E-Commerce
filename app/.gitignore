@@ -1,1 +1,10 @@
 /build
+/src/main/java/hcmute/edu/vn/chatbot_ec/main/hcmute/edu/vn/chatbot_ec/build/BuildConfig.java
+
+# Do not commit sensitive config files
+/src/main/java/hcmute/edu/vn/chatbot_ec/config/BuildConfig.java
+/src/main/java/hcmute/edu/vn/chatbot_ec/config/SecretKeys.java
+/release/app-release.aab
+
+# Local configuration file (sdk path, etc)
+/config.env

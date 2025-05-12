@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+config.env
+
+# BuildConfig with sensitive information
+**/BuildConfig.java

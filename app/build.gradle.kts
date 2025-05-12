@@ -3,18 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+
 android {
     namespace = "hcmute.edu.vn.chatbot_ec"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "hcmute.edu.vn.chatbot_ec"
-        minSdk = 33
+        minSdk = 28
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -33,6 +35,8 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+
 }
 
 dependencies {
@@ -48,5 +52,11 @@ dependencies {
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
+    val room_version = "2.6.1" // phiên bản mới nhất tại thời điểm hiện tại
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+    // Nếu dùng LiveData hoặc ViewModel
+    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
 
 }

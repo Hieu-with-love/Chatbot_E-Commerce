@@ -1,23 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="red">#f21b1b</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="yellow">#f5d142</color>
-    <color name="purple">#f542da</color>
-    <color name="green_backgr">#42f5bc</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Màu chính cho thương hiệu -->
+    <color name="primary">#2E2E2E</color> <!-- Xám đậm cho sự thanh lịch -->
+    <color name="primary_dark">#1A1A1A</color> <!-- Xám rất đậm cho độ sâu -->
+    <color name="primary_light">#4A4A4A</color> <!-- Xám nhạt hơn cho biến thể -->
+    <color name="accent">#FF6F61</color> <!-- Hồng san hô cho điểm nhấn nổi bật -->
+    <color name="accent_dark">#E0554A</color> <!-- Hồng san hô đậm hơn -->
+    <color name="accent_light">#FF9A8F</color> <!-- Hồng san hô nhạt -->
 
-    <color name="lightGray">#DED9D9</color>
-    <color name="darkGray">#FF868687</color>
-    <color name="colorButton">#2B7EDC</color>
+    <!-- Màu nền -->
+    <color name="background_light">#FFFFFF</color> <!-- Trắng cho nền sạch -->
+    <color name="background_soft">#F5F5F5</color> <!-- Xám nhạt cho tương phản nhẹ -->
+    <color name="background_alt">#F0ECE3</color> <!-- Màu kem nhạt cho nền thay thế -->
+    <color name="background_dark">#121212</color> <!-- Đen nhạt cho chế độ tối -->
 
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <!-- Màu chữ -->
+    <color name="text_primary">#212121</color> <!-- Xám đậm cho chữ chính -->
+    <color name="text_secondary">#757575</color> <!-- Xám trung cho chữ phụ -->
+    <color name="text_hint">#B0B0B0</color> <!-- Xám nhạt cho gợi ý -->
+    <color name="text_disabled">#B0BEC5</color> <!-- Xám xanh nhạt cho trạng thái vô hiệu -->
+    <color name="text_accent">#FF6F61</color> <!-- Hồng san hô cho chữ nhấn mạnh -->
+    <color name="text_on_dark">#E0E0E0</color> <!-- Xám nhạt cho chữ trên nền tối -->
 
+    <!-- Màu cho các thành phần giao diện -->
+    <color name="button_background">#FF6F61</color> <!-- Hồng san hô cho nút -->
+    <color name="button_background_pressed">#E0554A</color> <!-- Hồng san hô đậm khi nhấn -->
+    <color name="button_text">#FFFFFF</color> <!-- Trắng cho chữ trên nút -->
+    <color name="button_secondary_background">#4682B4</color> <!-- Xanh thép cho nút phụ -->
+    <color name="card_background">#FFFFFF</color> <!-- Trắng cho thẻ -->
+    <color name="card_background_elevated">#F8F8F8</color> <!-- Xám rất nhạt cho thẻ nổi -->
+    <color name="divider">#E0E0E0</color> <!-- Xám nhạt cho đường phân cách -->
+    <color name="icon_active">#212121</color> <!-- Xám đậm cho biểu tượng hoạt động -->
+    <color name="icon_inactive">#B0BEC5</color> <!-- Xám xanh nhạt cho biểu tượng không hoạt động -->
+
+    <!-- Màu đặc trưng cho thời trang -->
+    <color name="fashion_accent_1">#FFD700</color> <!-- Vàng cho sự sang trọng -->
+    <color name="fashion_accent_2">#4682B4</color> <!-- Xanh thép cho nét hiện đại -->
+    <color name="fashion_accent_3">#C71585</color> <!-- Đỏ tím cho sự táo bạo -->
+    <color name="fashion_accent_4">#FF4500</color> <!-- Cam cháy cho năng lượng -->
+    <color name="fashion_accent_5">#98FB98</color> <!-- Xanh mint cho sự tươi mới -->
+    <color name="fashion_accent_6">#E6E6FA</color> <!-- Tím lavender cho sự nhẹ nhàng -->
+    <color name="fashion_accent_7">#800000</color> <!-- Đỏ rượu vang cho sự quý phái -->
+    <color name="fashion_accent_8">#FFF8DC</color> <!-- Màu ngà cho sự tinh tế -->
+
+    <!-- Màu cho các trạng thái -->
+    <color name="success">#4CAF50</color> <!-- Xanh lá cho trạng thái thành công -->
+    <color name="error">#D32F2F</color> <!-- Đỏ cho trạng thái lỗi -->
+    <color name="warning">#FFA000</color> <!-- Vàng cam cho cảnh báo -->
+    <color name="info">#0288D1</color> <!-- Xanh dương cho thông tin -->
+
+    <!-- Màu cho chế độ tối -->
+    <color name="dark_mode_background">#121212</color> <!-- Đen nhạt cho nền tối -->
+    <color name="dark_mode_surface">#1E1E1E</color> <!-- Xám đen cho bề mặt tối -->
+    <color name="dark_mode_text_primary">#E0E0E0</color> <!-- Xám nhạt cho chữ chính tối -->
+    <color name="dark_mode_text_secondary">#B0BEC5</color> <!-- Xám xanh nhạt cho chữ phụ tối -->
 </resources>
