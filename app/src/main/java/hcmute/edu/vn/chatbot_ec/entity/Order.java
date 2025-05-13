@@ -2,6 +2,7 @@ package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import java.util.Date;
@@ -24,10 +25,10 @@ public class Order {
     private String shippingAddress;
     private String status;
     private double totalAmount;
-    
-    public Order() {
+      public Order() {
     }
     
+    @Ignore
     public Order(int userId, Date orderDate, String shippingAddress, String status, double totalAmount) {
         this.userId = userId;
         this.orderDate = orderDate;
