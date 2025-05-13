@@ -2,6 +2,7 @@ package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -23,11 +24,10 @@ public class Product {
     private String description;
     private double price;
     private String imgUrl;
-    private int categoryId;
-
-    public Product() {
+    private int categoryId;    public Product() {
     }
 
+    @Ignore
     public Product(String name, String brand, String description, double price, String imgUrl, int categoryId) {
         this.name = name;
         this.brand = brand;

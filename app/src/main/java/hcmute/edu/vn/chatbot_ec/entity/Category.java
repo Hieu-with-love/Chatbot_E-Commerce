@@ -1,6 +1,7 @@
 package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "categories")
@@ -8,11 +9,10 @@ public class Category {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String code;
-    private String name;
-
-    public Category() {
+    private String name;    public Category() {
     }
 
+    @Ignore
     public Category(String code, String name) {
         this.code = code;
         this.name = name;

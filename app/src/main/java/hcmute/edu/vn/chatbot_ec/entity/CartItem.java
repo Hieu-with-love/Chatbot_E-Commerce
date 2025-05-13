@@ -2,6 +2,7 @@ package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -32,10 +33,10 @@ public class CartItem {
     private int productId;
     private int quantity;
     private int cartId;
-    
-    public CartItem() {
+      public CartItem() {
     }
     
+    @Ignore
     public CartItem(int productId, int quantity, int cartId) {
         this.productId = productId;
         this.quantity = quantity;

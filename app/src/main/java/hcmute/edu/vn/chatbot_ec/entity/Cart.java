@@ -2,6 +2,7 @@ package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -20,10 +21,10 @@ public class Cart {
     private int id;
     private int userId;
     private double totalPrice;
-    
-    public Cart() {
+      public Cart() {
     }
     
+    @Ignore
     public Cart(int userId, double totalPrice) {
         this.userId = userId;
         this.totalPrice = totalPrice;

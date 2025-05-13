@@ -1,6 +1,7 @@
 package hcmute.edu.vn.chatbot_ec.entity;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "users")
@@ -11,10 +12,10 @@ public class User {
     private String phoneNumber;
     private String password;
     private String role;
-    
-    public User() {
+      public User() {
     }
     
+    @Ignore
     public User(String email, String phoneNumber, String password, String role) {
         this.email = email;
         this.phoneNumber = phoneNumber;
