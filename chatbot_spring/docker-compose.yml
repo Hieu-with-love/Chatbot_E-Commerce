@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: chatbot_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: chatbot_db
+      MYSQL_ROOT_PASSWORD: root
+      LANG: C.UTF-8
+    ports:
+      - "3305:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./initdb.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - chatbot_spring-service
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  chatbot_spring-service:
+    driver: bridge
+
+volumes:
+  mysql-data:
