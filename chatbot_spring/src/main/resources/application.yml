@@ -1,0 +1,30 @@
+server:
+  port: 9080
+
+spring:
+  application:
+    name: chatbot_spring
+  datasource:
+    url: jdbc:mysql://localhost:3305/chatbot_db?serverTimezone=Asia/Ho_Chi_Minh
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+openapi:
+  service:
+    api-docs: chatbot_spring
+    server: http://localhost:${server.port}
+    title: chatbot_spring service
+    version: 1.0.0
