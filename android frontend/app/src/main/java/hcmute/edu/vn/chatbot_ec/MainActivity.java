@@ -9,11 +9,13 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.List;
-
-import hcmute.edu.vn.chatbot_ec.database.AppDatabase;
-import hcmute.edu.vn.chatbot_ec.entity.Category;
-import hcmute.edu.vn.chatbot_ec.entity.Product;
+import hcmute.edu.vn.chatbot_ec.network.ApiClient;
+import hcmute.edu.vn.chatbot_ec.network.AuthApiService;
+import hcmute.edu.vn.chatbot_ec.request.RegisterRequest;
+import hcmute.edu.vn.chatbot_ec.response.ResponseData;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private TextView textViewProducts;
@@ -27,58 +29,38 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
 
-        btnSaveProduct.setOnClickListener(v -> {
-            createProduct();
-            Toast.makeText(this, "Product created", Toast.LENGTH_SHORT).show();
-        });
 
-        btnShowProducts.setOnClickListener(v -> {
-            new Thread(() -> {
-                List<Category> categories = AppDatabase.getDatabase(getApplicationContext())
-                        .categoryDao()
-                        .getAllCategoriesList();
-                
-                StringBuilder categoryData = new StringBuilder();
-                for (Category category : categories) {
-                    Log.d("Category", category.getId() + " - " + category.getName() + " - " + category.getCode());
-                    categoryData.append("ID: ").append(category.getId())
-                               .append(" | Name: ").append(category.getName())
-                               .append(" | Code: ").append(category.getCode())
-                               .append("\n\n");
-                }
-                
-                runOnUiThread(() -> {
-                    textViewProducts.setText(categoryData.toString());
-                    Toast.makeText(MainActivity.this, "Found " + categories.size() + " categories", Toast.LENGTH_SHORT).show();
-                });
-            }).start();
+        btnSaveProduct.setOnClickListener(v -> {
+            register();
         });
 
     }
 
-    private void createProduct() {
-        new Thread(() -> {
-            Category c = new Category();
-            c.setName("Áo sơ mi");
-            c.setCode("asm01");
+    private void register(){
+        RegisterRequest request = new RegisterRequest(
+                "abc@example.com",
+                "Nguyen Van A",
+                "0123456789",
+                "mypassword",
+                "USER"
+        );
 
-            long categoryId = AppDatabase.getDatabase(getApplicationContext())
-                    .categoryDao()
-                    .insert(c);
-            
-            Log.d("MainActivity", "Created category with ID: " + categoryId);
-            
-            // Add another category for testing
-            Category c2 = new Category();
-            c2.setName("Quần jeans");
-            c2.setCode("qj01");
-            
-            long categoryId2 = AppDatabase.getDatabase(getApplicationContext())
-                    .categoryDao()
-                    .insert(c2);
-                    
-            Log.d("MainActivity", "Created category with ID: " + categoryId2);
-        }).start();
+        AuthApiService authApiService = ApiClient.getAuthApiService();
+
+        authApiService.register(request).enqueue(
+                new Callback<ResponseData>() {
+                    @Override
+                    public void onResponse(Call<ResponseData> call, Response<ResponseData> response) {
+                        Toast.makeText(MainActivity.this, "Register success" + response.body().getData(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseData> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, "Register failed" + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("Register failed", t.getMessage());
+                    };
+                }
+        );
     }
 
     private void initViews(){
