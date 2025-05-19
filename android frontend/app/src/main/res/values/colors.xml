@@ -21,6 +21,7 @@
     <color name="text_disabled">#B0BEC5</color> <!-- Xám xanh nhạt cho trạng thái vô hiệu -->
     <color name="text_accent">#FF6F61</color> <!-- Hồng san hô cho chữ nhấn mạnh -->
     <color name="text_on_dark">#E0E0E0</color> <!-- Xám nhạt cho chữ trên nền tối -->
+    <color name="toolbar_text" >#eee</color>
 
     <!-- Màu cho các thành phần giao diện -->
     <color name="button_background">#FF6F61</color> <!-- Hồng san hô cho nút -->
