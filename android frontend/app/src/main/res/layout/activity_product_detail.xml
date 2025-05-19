@@ -21,21 +21,28 @@
             android:orientation="vertical">
 
             <!-- Hình ảnh sản phẩm -->
-            <androidx.cardview.widget.CardView
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="250dp"-->
+<!--                app:cardCornerRadius="16dp"-->
+<!--                app:cardElevation="6dp"-->
+<!--                android:layout_marginBottom="16dp">-->
+
+<!--                <ImageView-->
+<!--                    android:id="@+id/product_detail_image"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:scaleType="centerCrop"-->
+<!--                    android:contentDescription="Product Image"-->
+<!--                    tools:src="@tools:sample/avatars" />-->
+<!--            </androidx.cardview.widget.CardView>-->
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/vp_product_images"
                 android:layout_width="match_parent"
                 android:layout_height="250dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="6dp"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="16dp"/>
 
-                <ImageView
-                    android:id="@+id/product_detail_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="Product Image"
-                    tools:src="@tools:sample/avatars" />
-            </androidx.cardview.widget.CardView>
 
             <!-- Tên sản phẩm -->
             <TextView
@@ -47,15 +54,15 @@
                 android:textColor="#212121"
                 tools:text="Modern Leather Backpack" />
 
-            <!-- Thương hiệu -->
+            <!-- Loại -->
             <TextView
-                android:id="@+id/product_detail_brand"
+                android:id="@+id/product_detail_category"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:textColor="#757575"
                 android:layout_marginTop="4dp"
-                tools:text="UrbanWear Co." />
+                tools:text="Clothes" />
 
             <!-- Đánh giá -->
             <RatingBar
