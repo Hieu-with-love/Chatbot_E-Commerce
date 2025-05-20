@@ -38,7 +38,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req){
         try{
-            String jwt = authService.login(req.getUsername(), req.getPassword());
+            String jwt = authService.login(req.getEmail(), req.getPassword());
             ResponseData responseData = ResponseData.builder()
                     .data(jwt)
                     .status(200)
