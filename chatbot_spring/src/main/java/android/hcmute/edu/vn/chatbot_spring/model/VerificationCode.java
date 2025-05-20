@@ -26,6 +26,7 @@ public class VerificationCode {
     @Column(name = "expires_at", nullable = false)
     private LocalDate expiresAt;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 }

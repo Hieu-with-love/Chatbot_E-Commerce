@@ -54,7 +54,7 @@ public class User implements UserDetails {
     @Builder.Default
     private List<Order> orders = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private VerificationCode verificationCode;
 
     @Override
