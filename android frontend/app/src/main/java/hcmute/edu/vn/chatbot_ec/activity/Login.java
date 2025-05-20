@@ -32,6 +32,7 @@ import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.AuthApiService;
 import hcmute.edu.vn.chatbot_ec.request.LoginRequest;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
+import hcmute.edu.vn.chatbot_ec.utils.NetworkUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -95,6 +96,12 @@ public class Login extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (validateForm()) {
+                    // Check network availability before making the API call
+                    if (!NetworkUtils.isNetworkAvailable(Login.this)) {
+                        NetworkUtils.handleNetworkError(Login.this, new IOException("No network connection"));
+                        return;
+                    }
+
                     // Create login request
                     LoginRequest loginRequest = new LoginRequest();
                     loginRequest.setEmail(emailEditText.getText().toString().trim());
@@ -118,21 +125,10 @@ public class Login extends AppCompatActivity {
 
                             @Override
                             public void onFailure(Call<ResponseData> call, Throwable t) {
-                                if (t instanceof IOException) {
-                                    // Network connection error
-                                    Toast.makeText(Login.this, "Network connection error", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    // Other errors (JSON parsing, code errors, etc.)
-                                    Log.e("API_ERROR", "Unknown error: " + t.getMessage());
-                                    Toast.makeText(Login.this, "Login error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
+                                NetworkUtils.handleNetworkError(Login.this, t);
                             }
                         }
                     );
-                    
-                    // For demo purposes, show success animation
-                    // Remove this when API integration is complete
-                    showLoginSuccessAnimation();
                 }
             }
         });

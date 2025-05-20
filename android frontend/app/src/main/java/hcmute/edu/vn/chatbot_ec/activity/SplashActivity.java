@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.utils.ActivityUtils;
 
 public class SplashActivity extends AppCompatActivity {
     private Button getStartedBtn;
@@ -36,7 +37,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Navigate to sign in screen (implement later)
-                navigateToMain(); // For now, go to main
+                ActivityUtils.navigateToActivity(SplashActivity.this, Login.class);
             }
         });
 
