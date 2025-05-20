@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F9F9F9"
+    tools:context=".activity.ProductDetailActivity">
+
+    <!-- Nội dung có thể cuộn -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Hình ảnh sản phẩm -->
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="250dp"-->
+<!--                app:cardCornerRadius="16dp"-->
+<!--                app:cardElevation="6dp"-->
+<!--                android:layout_marginBottom="16dp">-->
+
+<!--                <ImageView-->
+<!--                    android:id="@+id/product_detail_image"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:scaleType="centerCrop"-->
+<!--                    android:contentDescription="Product Image"-->
+<!--                    tools:src="@tools:sample/avatars" />-->
+<!--            </androidx.cardview.widget.CardView>-->
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/vp_product_images"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_marginBottom="16dp"/>
+
+
+            <!-- Tên sản phẩm -->
+            <TextView
+                android:id="@+id/product_detail_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="24sp"
+                android:textColor="#212121"
+                tools:text="Modern Leather Backpack" />
+
+            <!-- Loại -->
+            <TextView
+                android:id="@+id/product_detail_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp"
+                tools:text="Clothes" />
+
+            <!-- Đánh giá -->
+            <RatingBar
+                android:id="@+id/product_detail_rating"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:numStars="5"
+                android:rating="4.5"
+                android:isIndicator="true"
+                android:stepSize="0.5"
+                android:layout_gravity="start" />
+
+            <!-- Giá -->
+            <TextView
+                android:id="@+id/product_detail_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="#FF5722"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp"
+                tools:text="$129.99" />
+
+            <!-- Số lượng còn -->
+            <TextView
+                android:id="@+id/product_detail_stock"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="In Stock: 8"
+                android:textSize="14sp"
+                android:textColor="#388E3C"
+                android:layout_marginTop="4dp" />
+
+            <!-- Nhãn mô tả -->
+            <TextView
+                android:id="@+id/product_detail_description_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Product Description"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginTop="24dp"
+                android:textColor="#212121" />
+
+            <!-- Mô tả chi tiết -->
+            <TextView
+                android:id="@+id/product_detail_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="#424242"
+                android:layout_marginTop="8dp"
+                tools:text="Crafted from premium leather, this backpack features a modern design with plenty of storage. Ideal for work, travel, or school." />
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Nút cố định dưới cùng -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:weightSum="2"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/button_add_to_cart"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Add to Cart"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/text_primary"
+            android:drawableStart="@drawable/ic_shopping_cart"
+            android:drawablePadding="8dp"
+            android:paddingVertical="12dp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/button_purchase"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Purchase"
+            android:textAllCaps="false"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/button_background"
+            android:drawablePadding="8dp"
+            android:paddingVertical="12dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+</LinearLayout>
