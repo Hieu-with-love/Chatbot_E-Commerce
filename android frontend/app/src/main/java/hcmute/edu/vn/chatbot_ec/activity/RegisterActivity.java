@@ -22,11 +22,11 @@ import java.io.IOException;
 
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.enums.HTTP_STATUS;
-import hcmute.edu.vn.chatbot_ec.model.User;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.AuthApiService;
 import hcmute.edu.vn.chatbot_ec.request.RegisterRequest;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
+import hcmute.edu.vn.chatbot_ec.utils.NetworkUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -88,9 +88,15 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (validateForm()) {
+                    // Check network availability before making the API call
+                    if (!NetworkUtils.isNetworkAvailable(RegisterActivity.this)) {
+                        NetworkUtils.handleNetworkError(RegisterActivity.this, new IOException("No network connection"));
+                        return;
+                    }
+
                     // Perform registration process
                     RegisterRequest registerRequest = new RegisterRequest();
-                    registerRequest.setEmail(fullNameEditText.getText().toString());
+                    registerRequest.setEmail(emailEditText.getText().toString());
                     registerRequest.setPhone(phoneEditText.getText().toString());
                     registerRequest.setFullName(fullNameEditText.getText().toString());
                     registerRequest.setPassword(passwordEditText.getText().toString());
@@ -113,21 +119,10 @@ public class RegisterActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onFailure(Call<ResponseData> call, Throwable t) {
-                                    if (t instanceof IOException) {
-                                        // Lỗi kết nối mạng
-                                        Toast.makeText(RegisterActivity.this, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show();
-                                    } else {
-                                        // Lỗi khác (ví dụ lỗi JSON, lỗi code...)
-                                        Log.e("API_ERROR", "Lỗi không xác định: " + t.getMessage());
-                                    }
+                                    NetworkUtils.handleNetworkError(RegisterActivity.this, t);
                                 }
                             }
                     );
-
-                    // This is where you'd implement your registration logic
-                    // For now, just show a success message and navigate
-                    Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
-                    navigateToMain();
                 }
             }
         });
@@ -205,7 +200,11 @@ public class RegisterActivity extends AppCompatActivity {
         
         return isValid;
     }
-    
+
+    private void navigateToNextActivity(Intent intent){
+        startActivity(intent);
+        finish();
+    }
     private void navigateToLogin() {
         Intent intent = new Intent(this, Login.class);
         startActivity(intent);
