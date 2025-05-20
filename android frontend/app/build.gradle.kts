@@ -52,11 +52,19 @@ dependencies {
 
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
-    val room_version = "2.6.1" // phiên bản mới nhất tại thời điểm hiện tại
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
     // Nếu dùng LiveData hoặc ViewModel
     implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Glide core library
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    // Nếu dùng annotation-based API (ví dụ @GlideModule), cần thêm compiler
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+
+    implementation ("androidx.viewpager2:viewpager2:1.0.0")
+
 
 }

@@ -37,6 +37,9 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private String role;
 
+    @Column(name = "is_verified", nullable = false)
+    private boolean isVerified = false;
+
     @OneToMany(mappedBy = "user")
     @JsonManagedReference
     @Builder.Default
