@@ -1,5 +1,6 @@
 package android.hcmute.edu.vn.chatbot_spring.controller;
 
+import android.hcmute.edu.vn.chatbot_spring.dto.request.LoginRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.RegisterRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ResponseData;
 import android.hcmute.edu.vn.chatbot_spring.service.AuthService;
@@ -29,6 +30,26 @@ public class AuthController {
             return ResponseEntity.ok(responseData);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req){
+        try{
+            String jwt = authService.login(req.getUsername(), req.getPassword());
+            ResponseData responseData = ResponseData.builder()
+                    .data(jwt)
+                    .status(200)
+                    .message("Login successfully")
+                    .build();
+            return ResponseEntity.ok(responseData);
+        }catch (Exception ex){
+            ResponseData responseData = ResponseData.builder()
+                    .data("Login failed")
+                    .status(500)
+                    .message("Login failed")
+                    .build();
+            return ResponseEntity.badRequest().body(responseData);
         }
     }
 
