@@ -5,7 +5,10 @@ public class RegisterRequest {
     private String fullName;
     private String phone;
     private String password;
+    private String confirmPassword;
     private String role;
+
+    public RegisterRequest(){}
 
     public RegisterRequest(String email, String fullName, String phone, String password, String role) {
         this.email = email;
@@ -53,5 +56,13 @@ public class RegisterRequest {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
     }
 }

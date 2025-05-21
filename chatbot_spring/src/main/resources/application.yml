@@ -15,6 +15,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hieu01bdvn@gmail.com
+    # This is password in feature "app password" of gmail
+    password: dwle xmjw pjgg jzju
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    protocol: smtp
 
 springdoc:
   api-docs:

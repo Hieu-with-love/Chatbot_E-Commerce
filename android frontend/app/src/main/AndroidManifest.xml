@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -16,26 +17,40 @@
         android:theme="@style/Theme.Chatbotec"
         tools:targetApi="31">
         <activity
+            android:name=".activity.NetworkError"
+            android:exported="false" />
+        <activity
+            android:name=".activity.Login"
+            android:exported="false" />
+        <activity
+            android:name=".activity.RegisterActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Chatbotec.NoActionBar" />
+        <activity
             android:name=".activity.UserProfileActivity"
             android:exported="false" />
         <activity
             android:name=".activity.ProductDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.ProductListActivity"
+            android:name=".MainActivity"
             android:exported="false" />
         <activity
             android:name=".ChatGemini"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".activity.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Chatbotec.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activity.ProductListActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
