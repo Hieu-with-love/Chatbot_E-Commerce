@@ -102,7 +102,7 @@ create table tbl_order_item
     id         int auto_increment
         primary key,
     order_id   int            null,
-    price      decimal(10, 2) not null,
+    priceAtPurchase      decimal(10, 2) not null,
     product_id int            null,
     quantity   int            not null,
     constraint FK1oy9x003q55eqmuiv0y8a15e
