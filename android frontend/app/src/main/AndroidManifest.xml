@@ -36,7 +36,7 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
-            android:name=".ChatGemini"
+            android:name=".activity.ChatGeminiActivity"
             android:exported="false" />
         <activity
             android:name=".activity.SplashActivity"
