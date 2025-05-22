@@ -25,6 +25,9 @@ public class Category {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "code")
+    private String code;
+
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 

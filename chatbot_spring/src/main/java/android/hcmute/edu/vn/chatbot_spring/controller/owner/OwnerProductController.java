@@ -1,8 +1,6 @@
 package android.hcmute.edu.vn.chatbot_spring.controller.owner;
 
-import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateCategoryRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateProductRequest;
-import android.hcmute.edu.vn.chatbot_spring.repository.ProductRepository;
 import android.hcmute.edu.vn.chatbot_spring.service.ProductService;
 import com.github.javafaker.Faker;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("${api.v1}/owner/products")
 @RequiredArgsConstructor
-public class ProductController {
+public class OwnerProductController {
     private final ProductService productService;
     private final Faker faker = new Faker();
 

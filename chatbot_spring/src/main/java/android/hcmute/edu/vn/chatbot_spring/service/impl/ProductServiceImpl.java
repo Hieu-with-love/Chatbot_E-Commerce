@@ -2,14 +2,20 @@ package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.PageResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductImageResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductResponse;
 import android.hcmute.edu.vn.chatbot_spring.model.Category;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
+import android.hcmute.edu.vn.chatbot_spring.model.ProductImage;
 import android.hcmute.edu.vn.chatbot_spring.repository.CategoryRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.ProductRepository;
 import android.hcmute.edu.vn.chatbot_spring.service.ProductService;
 import android.hcmute.edu.vn.chatbot_spring.util.ImageUtils;
+import android.hcmute.edu.vn.chatbot_spring.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,11 +29,6 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final ImageUtils imageUtils;
-
-    @Override
-    public Page<Product> getAllProducts(int page, int size, String sortBy, String sortDir) {
-        return null;
-    }
 
     @Override
     public Product createProduct(CreateProductRequest req, MultipartFile imageFile) {
@@ -105,7 +106,6 @@ public class ProductServiceImpl implements ProductService {
     }
     @Override
     public PageResponse<ProductResponse> getAllProducts(int page, int size, String sort, String direction) {
-        log.info("Fetching all branches with pagination: page={}, size={}, sort={}, direction={}", page, size, sort, direction);
         Pageable pageable = PaginationUtil.createPageable(page, size, sort, direction);
 
         Page<Product> productPage = productRepository.findAll(pageable);
