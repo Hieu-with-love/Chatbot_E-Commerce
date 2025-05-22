@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <item
+        android:id="@+id/action_toggle_url"
+        android:orderInCategory="100"
+        android:title="Toggle URL Mode"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_clear_chat"
+        android:orderInCategory="200"
+        android:title="Clear Chat"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/action_end_chat"
+        android:orderInCategory="300"
+        android:title="End Chat Session"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:showAsAction="never" />
+</menu>

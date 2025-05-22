@@ -67,11 +67,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> searchProducts(ProductSearchRequest request) {
-        String name = request.getName() != null ? request.getName() : "";
+        String productName = request.getProductName() != null ? request.getProductName() : "";
         String categoryName = request.getCategoryName() != null ? request.getCategoryName() : "";
+        String description = request.getDescription() != null ? request.getDescription() : "";
         BigDecimal price = request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO;
 
-        return productRepository.findByCriteria(name, categoryName, price);
+        return productRepository.findByCriteria(productName, description, categoryName, price);
     }
 
     @Override

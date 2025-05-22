@@ -6,10 +6,8 @@ Focus on extracting relevant fields for a product search query.
 Return a JSON with the following fields:
 - productName (string)
 - description (string or empty)
-- price (number or null if not specified)
-- thumbnailUrl (string, optional or leave as empty string)
-- productImages (array of strings, optional or empty)
-- category (string or empty)
+- price (a specific number, or approximately 200 if not provided)
+- categoryName (string or empty)
 
 If any field is not mentioned by the user, leave it as null or an empty string/array.
 
@@ -19,9 +17,7 @@ Output:
   "productName": "áo sơ mi tay dài",
   "description": "",
   "price": 300000,
-  "thumbnailUrl": "",
-  "productImages": [],
-  "category": "áo sơ mi"
+  "categoryName": "áo sơ mi"
 }
 
 Input: "%s"

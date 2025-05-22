@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
+        <!-- Cho phép localhost khi chạy trên máy ảo -->
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
-<!--        <domain includeSubdomains="true">10.134.193.137</domain>-->
+
+        <!-- IP thực của backend trong mạng LAN -->
+        <domain includeSubdomains="true">172.16.17.88</domain>
     </domain-config>
 </network-security-config>

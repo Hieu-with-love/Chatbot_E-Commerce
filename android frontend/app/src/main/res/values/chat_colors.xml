@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colors for chat messages -->
+    <color name="user_message_bg">#E3F2FD</color>  <!-- Light blue for user messages -->
+    <color name="bot_message_bg">#F5F5F5</color>   <!-- Light gray for bot messages -->
+</resources>
