@@ -22,7 +22,7 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal priceAtPurchase;
+    private BigDecimal price;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "id")
