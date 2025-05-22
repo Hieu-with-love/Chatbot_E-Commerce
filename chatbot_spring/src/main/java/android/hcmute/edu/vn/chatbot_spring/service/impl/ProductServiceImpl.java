@@ -103,4 +103,40 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new BadCredentialsException("Product not found witd id: "));
         productRepository.delete(existingProduct);
     }
+    @Override
+    public PageResponse<ProductResponse> getAllProducts(int page, int size, String sort, String direction) {
+        log.info("Fetching all branches with pagination: page={}, size={}, sort={}, direction={}", page, size, sort, direction);
+        Pageable pageable = PaginationUtil.createPageable(page, size, sort, direction);
+
+        Page<Product> productPage = productRepository.findAll(pageable);
+
+        return PageResponse.<ProductResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(productPage.getTotalPages())
+                .totalElements(productPage.getTotalElements())
+                .content(productPage.getContent().stream().map(this::convert).toList())
+                .build();
+    }
+
+    private ProductResponse convert(Product product) {
+        return ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .thumbnailUrl(product.getThumbnailUrl())
+                .productImages(product.getProductImages().stream()
+                        .map(this::convertProductImage)
+                        .toList())
+                .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
+                .build();
+    }
+
+    private ProductImageResponse convertProductImage(ProductImage productImage) {
+        return ProductImageResponse.builder()
+                .id(productImage.getId())
+                .imageUrl(productImage.getImageUrl())
+                .build();
+    }
 }

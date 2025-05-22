@@ -28,9 +28,6 @@ public class Category {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
-    @Column(name = "code")
-    private String code;
-
     @OneToMany(mappedBy = "category")
     @JsonManagedReference
     @Builder.Default
