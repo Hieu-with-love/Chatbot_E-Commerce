@@ -18,4 +18,14 @@ public class ApiClient {
         }
         return retrofit.create(AuthApiService.class);
     }
+
+    public static ProductApiService getProductApiService() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return retrofit.create(ProductApiService.class);
+    }
 }
