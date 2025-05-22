@@ -2,13 +2,23 @@ package hcmute.edu.vn.chatbot_ec;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
+
+import hcmute.edu.vn.chatbot_ec.fragments.CartFragment;
+import hcmute.edu.vn.chatbot_ec.fragments.ChatbotFragment;
+import hcmute.edu.vn.chatbot_ec.fragments.HomeFragment;
+import hcmute.edu.vn.chatbot_ec.fragments.UserFragment;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.AuthApiService;
 import hcmute.edu.vn.chatbot_ec.request.RegisterRequest;
@@ -21,19 +31,49 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewProducts;
     private Button btnSaveProduct, btnShowProducts;
 
+    private BottomNavigationView bottomNavigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-
         initViews();
+        bottomNavigationView = findViewById(R.id.bottomNavView);
+        loadFragment(new HomeFragment());
 
-
-        btnSaveProduct.setOnClickListener(v -> {
-            register();
+        bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Fragment selectedFragment = null;
+                int id = item.getItemId();
+                if (id == R.id.nav_home) {
+                    selectedFragment = new HomeFragment();
+                } else if (id == R.id.nav_cart) {
+                    selectedFragment = new CartFragment();
+                } else if (id == R.id.nav_chat) {
+                    selectedFragment = new ChatbotFragment();
+                } else if (id == R.id.nav_user) {
+                    selectedFragment = new UserFragment();
+                }
+                if (selectedFragment != null) {
+                    getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, selectedFragment)
+                            .commit();
+                    return true;
+                }
+                return false;
+            }
         });
 
+    }
+
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
     }
 
     private void register(){
@@ -64,8 +104,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews(){
-        textViewProducts = findViewById(R.id.tv_products);
-        btnSaveProduct = findViewById(R.id.btn_saveProduct);
-        btnShowProducts = findViewById(R.id.btn_showProducts);
+//        textViewProducts = findViewById(R.id.tv_products);
+//        btnSaveProduct = findViewById(R.id.btn_saveProduct);
+//        btnShowProducts = findViewById(R.id.btn_showProducts);
     }
 }

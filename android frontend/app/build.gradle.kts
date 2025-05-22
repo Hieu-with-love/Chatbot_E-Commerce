@@ -64,5 +64,8 @@ dependencies {
 
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
 
+    implementation (libs.material.v1110)
+
+
 
 }
