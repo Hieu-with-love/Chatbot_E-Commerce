@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
+import hcmute.edu.vn.chatbot_ec.MainActivity;
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.utils.ActivityUtils;
 
@@ -24,11 +25,13 @@ public class SplashActivity extends AppCompatActivity {
 
         initViews();
 
-        // Setting up click listeners        Button getStartedButton = findViewById(R.id.getStartedButton);
+        // Setting up click listeners
+        getStartedBtn = findViewById(R.id.getStartedButton);
         getStartedBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                navigateToRegister();
+                //navigateToRegister();
+                navigateToMain();
             }
         });
 
@@ -55,7 +58,7 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void navigateToMain() {
-        Intent intent = new Intent(this, ProductListActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
     }

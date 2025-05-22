@@ -26,6 +26,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.IOException;
 
+import hcmute.edu.vn.chatbot_ec.MainActivity;
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.enums.HTTP_STATUS;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
@@ -215,7 +216,7 @@ public class Login extends AppCompatActivity {
     }
     
     private void navigateToMain() {
-        Intent intent = new Intent(this, ProductListActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
