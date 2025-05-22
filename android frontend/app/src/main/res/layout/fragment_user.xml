@@ -31,13 +31,11 @@
                 android:background="@drawable/circle_white"
                 android:scaleType="centerCrop"
                 android:elevation="4dp"
-                android:contentDescription="User Avatar" />
-
-            <LinearLayout
+                android:contentDescription="User Avatar" />            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center||center_vertical"
+                android:gravity="center|center_vertical"
                 android:layout_gravity="center"
                 android:layout_marginTop="10dp">
 

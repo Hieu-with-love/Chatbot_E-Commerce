@@ -62,6 +62,7 @@ dependencies {
     // Nếu dùng annotation-based API (ví dụ @GlideModule), cần thêm compiler
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 
+    // Use to write API contains headers
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
     implementation ("com.squareup.okhttp3:okhttp:4.10.0")
 
