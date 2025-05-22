@@ -57,6 +57,9 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private VerificationCode verificationCode;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatSession> chatSessions = new ArrayList<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

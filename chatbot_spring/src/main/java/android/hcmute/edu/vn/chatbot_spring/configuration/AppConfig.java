@@ -38,6 +38,7 @@ public class AppConfig {
                         .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowedOrigins("*")
+                        .allowedOriginPatterns("*")
                         .maxAge(3600);
             }
         };

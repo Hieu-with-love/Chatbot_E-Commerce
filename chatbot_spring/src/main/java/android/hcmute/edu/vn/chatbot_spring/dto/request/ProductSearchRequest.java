@@ -8,7 +8,8 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class ProductSearchRequest {
-    private String name;
+    private String productName;
+    private String description;
     private String categoryName;
     private BigDecimal price;
 }
