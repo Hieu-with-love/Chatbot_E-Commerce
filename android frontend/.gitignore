@@ -15,6 +15,7 @@
 local.properties
 
 config.env
+.env
 
 # BuildConfig with sensitive information
 **/BuildConfig.java

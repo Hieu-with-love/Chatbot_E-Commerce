@@ -15,6 +15,20 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hieu01bdvn@gmail.com
+    # This is password in feature "app password" of gmail
+    password: dwle xmjw pjgg jzju
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    protocol: smtp
 
 springdoc:
   api-docs:
@@ -29,6 +43,13 @@ openapi:
     title: chatbot_spring service
     version: 1.0.0
 
+cloudinary:
+  cloud_name: dflwowhcc
+  api_key: 494678424734132
+  api_secret: vJhF_LgVIyZtilZDGVYaWmLxOns
+
 # different configs
 jwt:
   secretKey: Xv1MsBY3sOf96Zefj4wJoYbqk9a4cs2Jz8ln+mOoDUEGp78E2Wy3TDGx/HfzZ9VB
+api:
+  v1: /api/v1

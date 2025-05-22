@@ -25,6 +25,8 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class PreFilter extends OncePerRequestFilter {
+    private final JwtUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain filterChain) throws ServletException, IOException {
         log.info("{} {}", req.getMethod(), req.getRequestURI());
@@ -39,7 +41,7 @@ public class PreFilter extends OncePerRequestFilter {
                 String jwt = token.substring(7);
                 // decode jwt. Then we get claims
                 Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(JwtUtil.getDecodeKey())
+                        .setSigningKey(jwtUtil.getDecodeKey())
                         .build()
                         .parseClaimsJws(jwt)
                         .getBody();

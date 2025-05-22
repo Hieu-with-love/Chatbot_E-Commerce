@@ -19,17 +19,17 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "thumbnail_url")
-    private String thumbnailUrl;
-
     @Column(name = "code")
     private String code;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @OneToMany(mappedBy = "category")
     @JsonManagedReference

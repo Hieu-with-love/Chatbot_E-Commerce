@@ -42,8 +42,13 @@ public class Order {
     @JsonBackReference
     private User user;
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private List<Payment> payments = new ArrayList<>();
 }
