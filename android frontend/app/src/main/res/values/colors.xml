@@ -22,6 +22,7 @@
     <color name="text_accent">#FF6F61</color> <!-- Hồng san hô cho chữ nhấn mạnh -->
     <color name="text_on_dark">#E0E0E0</color> <!-- Xám nhạt cho chữ trên nền tối -->
     <color name="toolbar_text" >#eee</color>
+    <color name="text_status">#fff</color>
 
     <!-- Màu cho các thành phần giao diện -->
     <color name="button_background">#FF6F61</color> <!-- Hồng san hô cho nút -->
@@ -49,6 +50,8 @@
     <color name="error">#D32F2F</color> <!-- Đỏ cho trạng thái lỗi -->
     <color name="warning">#FFA000</color> <!-- Vàng cam cho cảnh báo -->
     <color name="info">#0288D1</color> <!-- Xanh dương cho thông tin -->
+    <color name="verified">#196600</color>
+    <color name="unverified">#5F0000</color>
 
     <!-- Màu cho chế độ tối -->
     <color name="dark_mode_background">#121212</color> <!-- Đen nhạt cho nền tối -->

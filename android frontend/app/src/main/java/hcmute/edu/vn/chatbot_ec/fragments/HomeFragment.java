@@ -35,6 +35,7 @@ public class HomeFragment extends Fragment {
         rvProducts = view.findViewById(R.id.rv_products);
         rvProducts.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
+        //Test data
         List<Product> products = new ArrayList<>();
         products.add(new Product(1, "Wireless Headphones", "Audio", new BigDecimal("99.99"), null, "Clothes"));
         products.add(new Product(2, "Smart Watch", "Wearables", new BigDecimal("129.99"), null, "General"));
