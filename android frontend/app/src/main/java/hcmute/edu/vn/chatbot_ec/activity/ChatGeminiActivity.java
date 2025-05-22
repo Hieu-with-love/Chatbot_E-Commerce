@@ -3,6 +3,8 @@ package hcmute.edu.vn.chatbot_ec.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,8 +31,16 @@ import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.adapter.ChatAdapter;
 import hcmute.edu.vn.chatbot_ec.callback.IntentCallback;
 import hcmute.edu.vn.chatbot_ec.config.BuildConfig;
+import hcmute.edu.vn.chatbot_ec.enums.SENDER;
 import hcmute.edu.vn.chatbot_ec.helper.GeminiHelper;
+import hcmute.edu.vn.chatbot_ec.model.ChatSessionResponse;
+import hcmute.edu.vn.chatbot_ec.model.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.model.Message;
+import hcmute.edu.vn.chatbot_ec.model.MessageResponse;
+import hcmute.edu.vn.chatbot_ec.network.ApiClient;
+import hcmute.edu.vn.chatbot_ec.network.ChatbotApiService;
+import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
+import hcmute.edu.vn.chatbot_ec.utils.ChatGeminiUtils;
 import hcmute.edu.vn.chatbot_ec.utils.MyJsonUtils;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -52,6 +62,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ChatAdapter chatAdapter;
     private List<Message> messageList;
+    private boolean welcomeMessageShown = false;
+    private ChatbotApiService chatbotApiService = ApiClient.getChatbotApiService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +72,15 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
         initView();
         setupRecyclerView();
+        startNewChatSession();
+        
+        // Display which URL mode is being used
+        boolean isEmulator = ChatGeminiUtils.isEmulator();
+        String baseUrl = ChatGeminiUtils.getBaseUrl();
+        Toast.makeText(this, "Running on " + (isEmulator ? "emulator" : "physical device") + 
+                "\nUsing URL: " + baseUrl, Toast.LENGTH_LONG).show();
+        Log.d("SpringBackend", "Device detection: " + (isEmulator ? "Emulator" : "Physical device") + 
+                " - Using URL: " + baseUrl);
 
         btnGeneratePrompt.setOnClickListener(v -> {
             String requestFromUser = generateRequest();
@@ -71,6 +92,44 @@ public class ChatGeminiActivity extends AppCompatActivity {
         if (btnCloseChat != null) {
             btnCloseChat.setOnClickListener(v -> closeChatRedirectToProductList());
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_toggle_url) {
+            toggleUrlMode();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void toggleUrlMode() {
+        boolean isCurrentlyEmulator = ChatGeminiUtils.isEmulator();
+        
+        // Toggle to the opposite mode
+        if (ChatGeminiUtils.isManualOverrideEnabled()) {
+            // If manual override already enabled, toggle the setting
+            ChatGeminiUtils.enableManualOverride(!isCurrentlyEmulator);
+        } else {
+            // Otherwise, enable manual override with opposite of current detection
+            ChatGeminiUtils.enableManualOverride(!isCurrentlyEmulator);
+        }
+        
+        // Display the new setting
+        String newMode = ChatGeminiUtils.isEmulator() ? "Emulator" : "Physical Device";
+        String baseUrl = ChatGeminiUtils.getBaseUrl();
+        
+        Toast.makeText(this, "URL mode changed to: " + newMode + 
+                "\nURL: " + baseUrl, Toast.LENGTH_LONG).show();
+        
+        Log.d("SpringBackend", "URL mode manually toggled to: " + newMode + 
+                " - Using URL: " + baseUrl);
     }
 
     private void closeChatRedirectToProductList() {
@@ -221,6 +280,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
     private void sendToSpringBackend(String jsonResponse, String originalPrompt, String intentType) {
         try {
+            Log.d("SpringBackend", "Sending request to backend with intent: " + intentType);
+            
             // Configure OkHttpClient with timeouts
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
@@ -230,13 +291,15 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
             // Prepare request body with proper content type
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody body = RequestBody.create(jsonResponse, JSON);
-
-            String endpoint = getEndpointByIntent(intentType);
-
+            RequestBody body = RequestBody.create(jsonResponse, JSON);            
+            String endpoint = ChatGeminiUtils.getEndpointByIntent(intentType);
+            String baseUrl = ChatGeminiUtils.getBaseUrl();
+            
+            Log.d("SpringBackend", "Using " + (ChatGeminiUtils.isEmulator() ? "emulator" : "physical device") + " URL: " + baseUrl);
+            
             // Build request with headers
             Request request = new Request.Builder()
-                    .url(BuildConfig.BACKEND_URL + endpoint)
+                    .url(baseUrl + endpoint)
                     .post(body)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Accept", "application/json")
@@ -299,7 +362,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
     // Cập nhật method generateFinalResponse để handle các intent khác nhau
     private void generateFinalResponse(String originalPrompt, String backendData, String intentType) {
-        String systemContext = getSystemContextForIntent(intentType);
+        String systemContext = ChatGeminiUtils.getSystemContextForIntent(intentType);
         String finalPrompt = systemContext +
                 " Câu hỏi gốc: \"" + originalPrompt + "\" " +
                 "Dữ liệu từ hệ thống: " + backendData +
@@ -323,18 +386,6 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 }
         );
     }
-    private String getSystemContextForIntent(String intentType) {
-        switch (intentType) {
-            case "search_product":
-                return "Bạn là trợ lý bán hàng. Dựa trên kết quả tìm kiếm sản phẩm,";
-            case "check_order":
-                return "Bạn là trợ lý khách hàng. Dựa trên thông tin đơn hàng,";
-            case "cancel_order":
-                return "Bạn là trợ lý khách hàng. Dựa trên việc xử lý hủy đơn hàng,";
-            default:
-                return "Bạn là trợ lý thân thiện. Dựa trên thông tin từ hệ thống,";
-        }
-    }
     // Helper methods cho error handling
     private void handleGenerationError(String stage, Throwable error) {
         showLoading(false);
@@ -357,19 +408,6 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Toast.makeText(ChatGeminiActivity.this, "Không nhận được phản hồi từ server", Toast.LENGTH_SHORT).show();
         Log.e("SpringBackend", "Empty response from server");
         addMessageToChat("Xin lỗi, tôi không nhận được phản hồi từ server. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
-    }
-
-    private String getEndpointByIntent(String intentType) {
-        switch (intentType) {
-            case "search_product":
-                return "/api/v1/chatbot/process-product";
-            case "check_order":
-                return "/api/v1/chatbot/check-order";
-            case "cancel_order":
-                return "/api/v1/chatbot/cancel-order";
-            default:
-                return "/api/v1/chatbot/process-general";
-        }
     }
 
     // Phương thức để tạo phản hồi cuối cùng từ Gemini
@@ -410,6 +448,46 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void showLoading(boolean isLoading) {
         if (progressBar != null) {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void startNewChatSession() {
+
+        ChatSessionStartRequest req = new ChatSessionStartRequest(4, "New Chat Session");
+
+        chatbotApiService.startChatSession(req).enqueue(new retrofit2.Callback<ChatSessionResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<ChatSessionResponse> call, retrofit2.Response<ChatSessionResponse> response) {
+                messageList.clear();
+                showWelcomeMessage();
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ChatSessionResponse> call, Throwable t) {
+
+            }
+        });
+    }
+
+    private void showWelcomeMessage() {
+        if (!welcomeMessageShown) {
+            String welcomeMessage = "Hello! I'm your shopping assistant! How can I assist you today?";
+            MessageRequest req = new MessageRequest();
+            req.setContent(welcomeMessage);
+            req.setSender(SENDER.USER.getValue());
+
+            chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                @Override
+                public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                    addMessageToChat(welcomeMessage, Message.SENT_BY_BOT);
+                    welcomeMessageShown = true;
+                }
+
+                @Override
+                public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+
+                }
+            });
         }
     }
 
