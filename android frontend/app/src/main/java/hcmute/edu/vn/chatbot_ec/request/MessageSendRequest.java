@@ -15,7 +15,10 @@ public class MessageSendRequest {
     
     @SerializedName("userId")
     private Integer userId;
-    
+
+    @SerializedName("sender")
+    private String sender;
+
     public MessageSendRequest() {}
     
     public MessageSendRequest(Integer sessionId, String content, Integer userId) {
@@ -40,11 +43,19 @@ public class MessageSendRequest {
         this.content = content;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public Integer getUserId(Integer userId) {
+        return this.userId;
     }
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public void setSender(String sender) {
+        this.sender = sender;
     }
 }

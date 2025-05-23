@@ -6,6 +6,7 @@ import hcmute.edu.vn.chatbot_ec.model.ApiResponse;
 import hcmute.edu.vn.chatbot_ec.model.Message;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
+import hcmute.edu.vn.chatbot_ec.request.MessageSendRequest;
 import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
 import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
@@ -25,7 +26,7 @@ public interface ChatbotApiService {
     Call<ChatSessionResponse> startChatSession(@Body ChatSessionStartRequest request);
     
     @POST("/api/v1/chatbot/send")
-    Call<MessageResponse> processMessage(@Body MessageRequest request);
+    Call<MessageResponse> processMessage(@Body MessageSendRequest request);
     
     @GET("/api/v1/chatbot/session/{sessionId}")
     Call<ChatSessionResponse> getChatSessionById(@Path("sessionId") Integer sessionId);

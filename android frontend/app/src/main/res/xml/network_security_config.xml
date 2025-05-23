@@ -6,6 +6,6 @@
         <domain includeSubdomains="true">10.0.2.2</domain>
 
         <!-- IP thực của backend trong mạng LAN -->
-        <domain includeSubdomains="true">172.16.17.88</domain>
+        <domain includeSubdomains="true">192.168.79.104</domain>
     </domain-config>
 </network-security-config>
