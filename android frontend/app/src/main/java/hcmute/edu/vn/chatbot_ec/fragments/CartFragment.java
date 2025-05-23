@@ -3,6 +3,7 @@ package hcmute.edu.vn.chatbot_ec.fragments;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,7 +22,7 @@ import hcmute.edu.vn.chatbot_ec.adapter.CartAdapter;
 import hcmute.edu.vn.chatbot_ec.model.CartItem;
 import hcmute.edu.vn.chatbot_ec.model.Product;
 
-public class CartFragment extends Fragment {
+public class CartFragment extends Fragment implements CartAdapter.OnSelectionChangedListener {
 
     RecyclerView rvCartItems;
     TextView tvTotalPrice;
@@ -40,6 +41,14 @@ public class CartFragment extends Fragment {
 
         tvTotalPrice = view.findViewById(R.id.tv_total_price);
         buttonCheckout = view.findViewById(R.id.button_checkout);
+        buttonCheckout.setOnClickListener(v -> {
+                    Fragment makeOrderFragment = new MakeOrderFragment();
+                    FragmentManager fm = requireActivity().getSupportFragmentManager();
+                    fm.beginTransaction()
+                            .replace(R.id.fragment_container, makeOrderFragment)
+                            .addToBackStack(null)
+                            .commit();
+                });
 
         //test data
         List<Product> products = new ArrayList<>();
@@ -61,18 +70,34 @@ public class CartFragment extends Fragment {
         cartItems.add(new CartItem(4, products.get(9), 1));
         cartItems.add(new CartItem(5, products.get(3), 2));
 
-        CartAdapter adapter = new CartAdapter(cartItems);
+        CartAdapter adapter = new CartAdapter(cartItems, this);
         rvCartItems.setAdapter(adapter);
 
-        // Calculate total price
+        buttonCheckout.setOnClickListener(v -> {
+            List<CartItem> selected = adapter.getSelectedItems();
+            MakeOrderFragment makeOrderFragment = new MakeOrderFragment();
+            Bundle args = new Bundle();
+            args.putSerializable("selected_items", new ArrayList<>(selected));
+            makeOrderFragment.setArguments(args);
+
+            FragmentManager fm = requireActivity().getSupportFragmentManager();
+            fm.beginTransaction()
+                    .replace(R.id.fragment_container, makeOrderFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         BigDecimal totalPrice = BigDecimal.ZERO;
-        for (CartItem item : cartItems) {
-            totalPrice = totalPrice.add(item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-        }
 
         String totalPriceStr = "Total: $" + totalPrice.toString();
         tvTotalPrice.setText(totalPriceStr);
 
         return view;
+    }
+
+    @Override
+    public void onSelectionChanged(BigDecimal newTotal) {
+        String totalPrice = "Total: $" + newTotal.toString();
+        tvTotalPrice.setText(totalPrice);
     }
 }
