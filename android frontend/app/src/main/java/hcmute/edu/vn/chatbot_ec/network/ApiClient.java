@@ -1,15 +1,21 @@
 package hcmute.edu.vn.chatbot_ec.network;
 
+import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import hcmute.edu.vn.chatbot_ec.utils.ChatGeminiUtils;
+import hcmute.edu.vn.chatbot_ec.utils.DateTimeAdapter;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ApiClient {
+public class ApiClient extends Application {
     private static Retrofit retrofit = null;
     private static final int TIMEOUT_SECONDS = 30;
 
@@ -22,37 +28,60 @@ public class ApiClient {
         }
         Log.d("ApiClient", "Using base URL: " + baseUrl);
         return baseUrl;
+    }    private static Context applicationContext;
+    
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        applicationContext = getApplicationContext();
     }
-
+    
     /**
      * Creates and configures an OkHttpClient with appropriate timeouts
      * @return Configured OkHttpClient instance
      */
     private static OkHttpClient getHttpClient() {
+        if (applicationContext == null) {
+            Log.e("ApiClient", "Application context is null. Make sure ApiClient is properly initialized.");
+            // Create a client without the auth interceptor if context is not available
+            return new OkHttpClient.Builder()
+                    .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .build();
+        }
+        
         return new OkHttpClient.Builder()
+                .addInterceptor(new AuthInterceptor(applicationContext))
                 .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .build();
+    }    /**
+     * Creates a Gson instance configured with custom type adapters
+     * @return Configured Gson instance
+     */
+    private static Gson createGson() {
+        return new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new DateTimeAdapter())
+                .create();
     }
-
+    
     public static AuthApiService getAuthApiService() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(getBaseUrl())
                     .client(getHttpClient())
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
                     .build();
         }
         return retrofit.create(AuthApiService.class);
-    }
-
-    public static ProductApiService getProductApiService() {
+    }    public static ProductApiService getProductApiService() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(getBaseUrl())
                     .client(getHttpClient())
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
                     .build();
         }
         return retrofit.create(ProductApiService.class);
@@ -63,7 +92,7 @@ public class ApiClient {
             retrofit = new Retrofit.Builder()
                     .baseUrl(getBaseUrl())
                     .client(getHttpClient())
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
                     .build();
         }
         return retrofit.create(ChatbotApiService.class);

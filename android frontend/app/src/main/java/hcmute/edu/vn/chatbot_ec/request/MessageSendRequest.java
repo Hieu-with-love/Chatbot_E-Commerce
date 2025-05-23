@@ -1,4 +1,4 @@
-package hcmute.edu.vn.chatbot_ec.model;
+package hcmute.edu.vn.chatbot_ec.request;
 
 import com.google.gson.annotations.SerializedName;
 

@@ -2,7 +2,9 @@ package hcmute.edu.vn.chatbot_ec.activity;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -21,6 +23,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -32,8 +35,10 @@ import hcmute.edu.vn.chatbot_ec.enums.HTTP_STATUS;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.AuthApiService;
 import hcmute.edu.vn.chatbot_ec.request.LoginRequest;
+import hcmute.edu.vn.chatbot_ec.response.AuthResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.utils.NetworkUtils;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -95,41 +100,93 @@ public class Login extends AppCompatActivity {
         // Login button click listener
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (validateForm()) {
-                    // Check network availability before making the API call
-                    if (!NetworkUtils.isNetworkAvailable(Login.this)) {
-                        NetworkUtils.handleNetworkError(Login.this, new IOException("No network connection"));
-                        return;
-                    }
-
-                    // Create login request
-                    LoginRequest loginRequest = new LoginRequest();
-                    loginRequest.setEmail(emailEditText.getText().toString().trim());
-                    loginRequest.setPassword(passwordEditText.getText().toString());
-
-                    // Get auth API service
-                    AuthApiService authApiService = ApiClient.getAuthApiService();
+            public void onClick(View v) {                if (validateForm()) {
+                    // Show loading indication
+                    loginButton.setEnabled(false);
+                    loginButton.setText("Logging in...");
                     
-                    // Call login API
-                    authApiService.login(loginRequest).enqueue(
-                        new Callback<ResponseData>() {
-                            @Override
-                            public void onResponse(Call<ResponseData> call, Response<ResponseData> response) {
-                                if (response.body() != null && response.body().getStatus() == HTTP_STATUS.OK.getCode()) {
-                                    // Show success animation
-                                    showLoginSuccessAnimation();
-                                } else {
-                                    Toast.makeText(Login.this, "Login failed! Invalid credentials.", Toast.LENGTH_SHORT).show();
-                                }
-                            }
+                    // Check network connection before proceeding
+                    NetworkUtils.checkNetworkConnection(Login.this, new NetworkUtils.NetworkCallback() {
+                        @Override
+                        public void onNetworkAvailable() {
+                            // Create login request
+                            LoginRequest loginRequest = new LoginRequest();
+                            loginRequest.setEmail(emailEditText.getText().toString().trim());
+                            loginRequest.setPassword(passwordEditText.getText().toString());
+                            
+                            // Get auth API service
+                            AuthApiService authApiService = ApiClient.getAuthApiService();
+                            
+                            // Log attempt
+                            Log.d("Login", "Attempting login for user: " + emailEditText.getText().toString().trim());
+                              // Call login API
+                            authApiService.login(loginRequest).enqueue(
+                                new Callback<ResponseData<String>>() {
+                                    @Override
+                                    public void onResponse(Call<ResponseData<String>> call, Response<ResponseData<String>> response) {
+                                        // Re-enable login button
+                                        loginButton.setEnabled(true);
+                                        loginButton.setText("Login");
+                                        
+                                        if (response.isSuccessful() && response.body() != null) {
+                                            if (response.body().getStatus() == HTTP_STATUS.OK.getCode()) {
+                                                String jwt = response.body().getData();
+                                                // Log token receipt (don't log the actual token in production)
+                                                Log.d("Login", "JWT token received successfully.\n" + jwt);
 
-                            @Override
-                            public void onFailure(Call<ResponseData> call, Throwable t) {
-                                NetworkUtils.handleNetworkError(Login.this, t);
-                            }
+                                                // Save token with TokenManager
+                                                TokenManager.saveToken(getApplicationContext(), jwt);
+
+                                                // Reset Retrofit instance to ensure it uses the new token
+                                                ApiClient.resetRetrofitInstance();
+
+                                                // Show success animation
+                                                showLoginSuccessAnimation();
+                                            } else {
+                                                // Error message from server
+                                                String errorMessage = response.body().getMessage();
+                                                if (errorMessage != null && !errorMessage.isEmpty()) {
+                                                    Toast.makeText(Login.this, errorMessage, Toast.LENGTH_SHORT).show();
+                                                } else {
+                                                    Toast.makeText(Login.this, "Login failed! Invalid credentials.", Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        } else {
+                                            try {
+                                                // Try to parse error body
+                                                String errorBody = response.errorBody() != null ? 
+                                                    response.errorBody().string() : "Unknown error";
+                                                Log.e("Login", "Error response: " + errorBody);
+                                                Toast.makeText(Login.this, "Login failed! Please check your credentials.", Toast.LENGTH_SHORT).show();
+                                            } catch (IOException e) {
+                                                Log.e("Login", "Error parsing error response", e);
+                                                Toast.makeText(Login.this, "Login failed! Please try again.", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<ResponseData<String>> call, Throwable t) {
+                                        // Re-enable login button
+                                        loginButton.setEnabled(true);
+                                        loginButton.setText("Login");
+                                        
+                                        Log.e("Login", "Network error", t);
+                                        NetworkUtils.handleNetworkError(Login.this, t);                                    }
+                                }
+                            );
                         }
-                    );
+                        
+                        @Override
+                        public void onNetworkUnavailable() {
+                            // Re-enable login button
+                            loginButton.setEnabled(true);
+                            loginButton.setText("Login");
+                            
+                            // Network error is handled by NetworkUtils.checkNetworkConnection
+                            Log.e("Login", "Network unavailable");
+                        }
+                    });
                 }
             }
         });
