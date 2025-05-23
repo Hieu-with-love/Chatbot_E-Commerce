@@ -37,12 +37,15 @@ import hcmute.edu.vn.chatbot_ec.helper.GeminiHelper;
 import hcmute.edu.vn.chatbot_ec.model.Message;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.ChatbotApiService;
+import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionRequest;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
+import hcmute.edu.vn.chatbot_ec.request.MessageSendRequest;
 import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
 import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
+import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import hcmute.edu.vn.chatbot_ec.utils.ChatGeminiUtils;
 import hcmute.edu.vn.chatbot_ec.utils.MyJsonUtils;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
@@ -68,6 +71,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private List<Message> messageList;
     private boolean welcomeMessageShown = false;
     private ChatbotApiService chatbotApiService = ApiClient.getChatbotApiService();
+    private UserApiService userApiService = ApiClient.getUserApiService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,6 +162,37 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.d("GeminiAPI", "User Input: " + userInput);
 
         if (!userInput.isEmpty()) {
+            // Add user message to database
+            String token = TokenManager.getToken(this);
+            userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+                @Override
+                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                    MessageSendRequest req = new MessageSendRequest();
+                    req.setContent(userInput);
+                    req.setSender(SENDER.USER.getValue());
+                    assert response.body() != null;
+                    req.setSessionId(response.body().getChatSessionId());
+                    req.getUserId(response.body().getUserId());
+
+                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                            Log.d("GeminiAPI", "Response from Gemini: " + response.body());
+                            welcomeMessageShown = true;
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+
+                        }
+                    });
+                }
+                @Override
+                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+
+                }
+            });
+
             // Add user message to the chat by user sender
             addMessageToChat(userInput, Message.SENT_BY_USER);
             
@@ -382,6 +417,37 @@ public class ChatGeminiActivity extends AppCompatActivity {
                         if (error != null) {
                             handleGenerationError("tạo phản hồi cuối cùng", error);
                         } else if (finalResponse != null) {
+                            // Add user message to database
+                            String token = TokenManager.getToken(this);
+                            userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+                                @Override
+                                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                                    Log.d("GeminiAPI", "Response get me from Gemini at final response: " + response.body().getChatSessionId() + " " + response.body().getUserId());
+                                    MessageSendRequest req = new MessageSendRequest();
+                                    req.setContent(finalResponse);
+                                    req.setSender(SENDER.BOT.getValue());
+                                    assert response.body() != null;
+                                    req.setSessionId(response.body().getChatSessionId());
+                                    req.setUserId(response.body().getUserId());
+
+                                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                                        @Override
+                                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                                            Log.d("GeminiAPI", "Response from Gemini at final response: " + response.body());
+                                            welcomeMessageShown = true;
+                                        }
+
+                                        @Override
+                                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+
+                                        }
+                                    });
+                                }
+                                @Override
+                                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+
+                                }
+                            });
                             addMessageToChat(finalResponse, Message.SENT_BY_BOT);
                             Log.d("GeminiAPI", "Final Response (" + intentType + "): " + finalResponse);
                         }
@@ -412,33 +478,6 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Toast.makeText(ChatGeminiActivity.this, "Không nhận được phản hồi từ server", Toast.LENGTH_SHORT).show();
         Log.e("SpringBackend", "Empty response from server");
         addMessageToChat("Xin lỗi, tôi không nhận được phản hồi từ server. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
-    }
-
-    // Phương thức để tạo phản hồi cuối cùng từ Gemini
-    private void generateFinalResponse(String originalPrompt, String backendData) {
-        String finalPrompt = "Dựa trên câu hỏi gốc là: \"" + originalPrompt + "\" " +
-                "và dữ liệu nhận được từ hệ thống là: " + backendData + ", " +
-                "hãy tạo một câu trả lời hữu ích và thân thiện cho người dùng.";
-
-        GeminiHelper.generateResponse(
-                finalPrompt,
-                BuildConfig.API_KEY,
-                BuildConfig.MODEL_NAME,
-                (finalResponse, error) -> {
-                    runOnUiThread(() -> {
-                        showLoading(false);
-                        if (error != null) {
-                            Toast.makeText(this, "Lỗi giai đoạn cuối: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                            Log.e("GeminiAPI", "Error generating final response", error);
-                        } else if (finalResponse != null) {
-                            // Hiển thị câu trả lời cuối cùng cho người dùng
-                            addMessageToChat(finalResponse, Message.SENT_BY_BOT);
-                            Log.d("GeminiAPI", "Final Response: " + finalResponse);
-                        }
-                    });
-                    return kotlin.Unit.INSTANCE;
-                }
-        );
     }
 
     private void addMessageToChat(String content, int sentBy) {
@@ -566,19 +605,33 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void showWelcomeMessage() {
         if (!welcomeMessageShown) {
             String welcomeMessage = "Hello! I'm your shopping assistant! How can I assist you today?";
-            MessageRequest req = new MessageRequest();
-            req.setContent(welcomeMessage);
-            req.setSender(SENDER.USER.getValue());
 
-            chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+            String token = TokenManager.getToken(this);
+            userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
                 @Override
-                public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
-                    addMessageToChat(welcomeMessage, Message.SENT_BY_BOT);
-                    welcomeMessageShown = true;
+                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                    MessageSendRequest req = new MessageSendRequest();
+                    req.setContent(welcomeMessage);
+                    req.setSender(SENDER.BOT.getValue());
+                    assert response.body() != null;
+                    req.setSessionId(response.body().getChatSessionId());
+                    req.getUserId(response.body().getUserId());
+
+                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                            addMessageToChat(welcomeMessage, Message.SENT_BY_BOT);
+                            welcomeMessageShown = true;
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+
+                        }
+                    });
                 }
-
                 @Override
-                public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
 
                 }
             });

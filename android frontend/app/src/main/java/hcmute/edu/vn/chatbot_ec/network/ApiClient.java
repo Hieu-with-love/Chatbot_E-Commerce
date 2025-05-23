@@ -76,7 +76,20 @@ public class ApiClient extends Application {
                     .build();
         }
         return retrofit.create(AuthApiService.class);
-    }    public static ProductApiService getProductApiService() {
+    }
+
+    public static UserApiService getUserApiService() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(getBaseUrl())
+                    .client(getHttpClient())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
+                    .build();
+        }
+        return retrofit.create(UserApiService.class);
+    }
+
+    public static ProductApiService getProductApiService() {
         if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(getBaseUrl())
