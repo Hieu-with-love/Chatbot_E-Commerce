@@ -9,7 +9,6 @@ import java.util.List;
 @Data
 @Builder
 public class UserResponse {
-    @JsonProperty("chat_session_id")
-    private String chatSessionId;
-    private List<MessageResponse> messages;
+    private int chatSessionId;
+    private int userId;
 }

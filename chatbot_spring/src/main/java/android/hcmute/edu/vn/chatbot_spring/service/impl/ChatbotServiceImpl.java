@@ -75,7 +75,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         // Save user message
         Message userMessage = Message.builder()
                 .content(request.getContent())
-                .sender(SENDER.valueOf(request.getSender()))
+                .sender(SENDER.fromValue(request.getSender()))
                 .sentTime(LocalDateTime.now())
                 .chatSession(chatSession)
                 .build();
