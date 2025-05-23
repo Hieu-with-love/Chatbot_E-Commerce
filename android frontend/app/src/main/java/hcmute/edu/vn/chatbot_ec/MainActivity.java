@@ -1,5 +1,6 @@
 package hcmute.edu.vn.chatbot_ec;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -15,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
+import hcmute.edu.vn.chatbot_ec.activity.ChatGeminiActivity;
 import hcmute.edu.vn.chatbot_ec.fragments.CartFragment;
 import hcmute.edu.vn.chatbot_ec.fragments.ChatbotFragment;
 import hcmute.edu.vn.chatbot_ec.fragments.HomeFragment;
@@ -52,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_cart) {
                     selectedFragment = new CartFragment();
                 } else if (id == R.id.nav_chat) {
-                    selectedFragment = new ChatbotFragment();
+                    Intent chatIntent = new Intent(MainActivity.this, ChatGeminiActivity.class);
+                    startActivity(chatIntent);
                 } else if (id == R.id.nav_user) {
                     selectedFragment = new UserFragment();
                 }

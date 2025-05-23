@@ -27,21 +27,25 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import hcmute.edu.vn.chatbot_ec.MainActivity;
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.adapter.ChatAdapter;
 import hcmute.edu.vn.chatbot_ec.callback.IntentCallback;
 import hcmute.edu.vn.chatbot_ec.config.BuildConfig;
 import hcmute.edu.vn.chatbot_ec.enums.SENDER;
 import hcmute.edu.vn.chatbot_ec.helper.GeminiHelper;
-import hcmute.edu.vn.chatbot_ec.model.ChatSessionResponse;
-import hcmute.edu.vn.chatbot_ec.model.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.model.Message;
-import hcmute.edu.vn.chatbot_ec.model.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.ChatbotApiService;
+import hcmute.edu.vn.chatbot_ec.request.ChatSessionRequest;
+import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
+import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
+import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
+import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.utils.ChatGeminiUtils;
 import hcmute.edu.vn.chatbot_ec.utils.MyJsonUtils;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -90,7 +94,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         });
         
         if (btnCloseChat != null) {
-            btnCloseChat.setOnClickListener(v -> closeChatRedirectToProductList());
+            btnCloseChat.setOnClickListener(v -> closeChatRedirectToMain());
         }
     }
 
@@ -132,8 +136,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 " - Using URL: " + baseUrl);
     }
 
-    private void closeChatRedirectToProductList() {
-        Intent intent = new Intent(ChatGeminiActivity.this, ProductListActivity.class);
+    private void closeChatRedirectToMain() {
+        Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
     }
@@ -452,8 +456,98 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
 
     private void startNewChatSession() {
+        String token = TokenManager.getToken(this);
 
-        ChatSessionStartRequest req = new ChatSessionStartRequest(4, "New Chat Session");
+        chatbotApiService.checkExistsChatSession(token).enqueue(new retrofit2.Callback<ChatSessionResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<ChatSessionResponse> call, retrofit2.Response<ChatSessionResponse> response) {                if (response.isSuccessful() && response.body().isFirstSession()){
+                    Integer userId = response.body().getUserId();
+                    // Use default user ID if null
+                    createNewChatSession(userId != null ? userId : 1);
+                    Log.d("App", "New session created" + response.body());
+                }
+                else if (response.isSuccessful() && !response.body().isFirstSession()){
+                    Log.d("App", "Session exists" + response.body());
+                    Integer userId = response.body().getUserId();
+                    // Use default user ID if null
+                    openChatSession(1, userId != null ? userId : 4);
+                    Log.d("App", "Session exists");
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ChatSessionResponse> call, Throwable t) {
+                Log.e("ChatSession", "Failed to check chat session", t);
+                Toast.makeText(ChatGeminiActivity.this, 
+                    "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                // Create a new session as fallback
+                createNewChatSession(1); // Default user ID as fallback
+            }
+        });
+    }
+
+    private void openChatSession(Integer sessionId, int userId) {
+        // Use the new direct endpoint to get session with messages
+        chatbotApiService.getChatSessionWithMessages(sessionId, userId).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
+            @Override
+            public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ResponseData<ChatSessionResponse> responseData = response.body();
+                    if (responseData.getData() != null && responseData.getData().getMessages() != null) {
+                        // Clear existing messages
+                        messageList.clear();
+                        
+                        // Add all messages from the chat session
+                        List<MessageResponse> messages = responseData.getData().getMessages();
+                        for (MessageResponse msg : messages) {
+                            // Determine if message is from bot or user
+                            int sentBy = msg.getSender().equals(SENDER.BOT.getValue()) ?
+                                Message.SENT_BY_BOT : Message.SENT_BY_USER;
+                            
+                            // Add message to the list
+                            messageList.add(new Message(msg.getContent(), sentBy));
+                        }
+                        
+                        // Update the adapter
+                        chatAdapter.notifyDataSetChanged();
+                        
+                        // Scroll to the bottom to show latest message
+                        if (!messageList.isEmpty()) {
+                            recyclerView.smoothScrollToPosition(messageList.size() - 1);
+                            // Set welcome message shown if there are already messages
+                            welcomeMessageShown = true;
+                        } else {
+                            // If no messages, show welcome message
+                            showWelcomeMessage();
+                        }
+                        
+                        Log.d("ChatSession", "Loaded " + messageList.size() + " messages from session " + sessionId);
+                    } else {
+                        Log.d("ChatSession", "No messages found in session or session data is null");
+                        showWelcomeMessage();
+                    }
+                } else {
+                    Log.e("ChatSession", "Failed to load chat session: " + response.code());
+                    Toast.makeText(ChatGeminiActivity.this, 
+                        "Failed to load chat session. Error: " + response.code(), 
+                        Toast.LENGTH_SHORT).show();
+                    showWelcomeMessage();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
+                Log.e("ChatSession", "Error loading chat session", t);
+                Toast.makeText(ChatGeminiActivity.this, 
+                    "Connection error: " + t.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+                showWelcomeMessage();
+            }
+        });
+    }
+
+    private void createNewChatSession(int userId) {
+        ChatSessionStartRequest req = new ChatSessionStartRequest(userId, "New Chat Session");
 
         chatbotApiService.startChatSession(req).enqueue(new retrofit2.Callback<ChatSessionResponse>() {
             @Override

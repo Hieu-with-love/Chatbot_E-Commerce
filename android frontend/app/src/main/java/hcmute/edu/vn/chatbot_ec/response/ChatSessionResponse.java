@@ -2,10 +2,7 @@ package hcmute.edu.vn.chatbot_ec.response;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.time.LocalDateTime;
 import java.util.List;
-
-import hcmute.edu.vn.chatbot_ec.model.MessageResponse;
 
 public class ChatSessionResponse {
     @SerializedName("id")
@@ -28,6 +25,9 @@ public class ChatSessionResponse {
     
     @SerializedName("messages")
     private List<MessageResponse> messages;
+
+    @SerializedName("isFirstSession")
+    private boolean isFirstSession;
     
     public ChatSessionResponse() {
     }
@@ -86,5 +86,13 @@ public class ChatSessionResponse {
     
     public void setMessages(List<MessageResponse> messages) {
         this.messages = messages;
+    }
+
+    public boolean isFirstSession() {
+        return isFirstSession;
+    }
+
+    public void setFirstSession(boolean firstSession) {
+        isFirstSession = firstSession;
     }
 }
