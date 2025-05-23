@@ -1,5 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
+import android.hcmute.edu.vn.chatbot_spring.configuration.JwtProvider;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +32,10 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final ChatSessionRepository chatSessionRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
+    
+    // Import the mapper
+    private final android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper chatSessionMapper = new android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper();
 
     @Override
     @Transactional
@@ -46,6 +53,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .startedAt(LocalDateTime.now())
                 .user(user)
                 .messages(new ArrayList<>())
+                .firstSession(true)
                 .build();
 
         ChatSession savedSession = chatSessionRepository.save(chatSession);
@@ -86,7 +94,8 @@ public class ChatbotServiceImpl implements ChatbotService {
     }
 
     @Override
-    public List<ChatSessionResponse> getChatSessionsByUserId(Integer userId) {        User user = userRepository.findById(userId)
+    public List<ChatSessionResponse> getChatSessionsByUserId(Integer userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
                 
         List<ChatSession> chatSessions = chatSessionRepository.findByUserId(userId);
@@ -110,6 +119,45 @@ public class ChatbotServiceImpl implements ChatbotService {
     @Override
     public Message saveMessage(Message message) {
         return messageRepository.save(message);
+    }
+
+    @Override
+    public ChatSessionResponse existsAnyChatSessionByToken(String token) {
+        String email = jwtProvider.getEmailFromJwtToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return ChatSessionResponse.builder()
+                .userId(user.getId())
+                .isFistSession(true)
+                .build();
+    }
+
+    @Override
+    public Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request) {
+        return chatSessionRepository.findBySessionIdAndUserId(request.getSessionId(), request.getUserId());
+    }
+
+    @Override
+    public android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto getChatSessionWithMessages(Integer sessionId, Integer userId) {
+        // Find the chat session that belongs to the user
+        ChatSession chatSession = chatSessionRepository.findSessionByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Chat session not found with ID: " + sessionId + " for user: " + userId));
+        
+        // Fetch all messages for this session, ordered by sentTime ascending
+        List<Message> messages = messageRepository.findBySessionIdAndSentTimeAsc(sessionId);
+        
+        // Use the mapper to convert to DTO
+        return android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper.toDto(chatSession, messages);
+    }
+
+    @Override
+    public void updateChatSession(Integer id) {
+        ChatSession chatSession = chatSessionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + id));
+
+        chatSession.setFirstSession(false);
+        chatSessionRepository.save(chatSession);
     }
 
     /**

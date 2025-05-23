@@ -1,13 +1,14 @@
 package android.hcmute.edu.vn.chatbot_spring.service;
 
+import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
-import android.hcmute.edu.vn.chatbot_spring.model.ChatSession;
 import android.hcmute.edu.vn.chatbot_spring.model.Message;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatbotService {
     ChatSessionResponse startChatSession(ChatSessionStartRequest request);
@@ -21,4 +22,18 @@ public interface ChatbotService {
     ChatSessionResponse endChatSession(Integer sessionId);
 
     Message saveMessage(Message message);
+    
+    ChatSessionResponse existsAnyChatSessionByToken(String token);
+    
+    Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request);
+    
+    /**
+     * Get a chat session with all its messages by sessionId and userId
+     * @param sessionId The session ID
+     * @param userId The user ID
+     * @return ChatSessionDto containing the session and all messages
+     */
+    android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto getChatSessionWithMessages(Integer sessionId, Integer userId);
+
+    void updateChatSession(Integer id);
 }

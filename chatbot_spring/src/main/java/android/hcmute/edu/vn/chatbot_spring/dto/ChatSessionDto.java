@@ -1,4 +1,4 @@
-package android.hcmute.edu.vn.chatbot_spring.dto.response;
+package android.hcmute.edu.vn.chatbot_spring.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,13 +12,12 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatSessionResponse {
+public class ChatSessionDto {
     private Integer id;
     private String sessionTitle;
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
     private Integer userId;
     private String userName;
-    private List<MessageResponse> messages;
-    private boolean isFistSession;
+    private List<MessageDto> messages;
 }

@@ -30,9 +30,13 @@ public class ChatSession {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    @Column(name = "is_first_session")
+    private Boolean firstSession;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;    // One session has many messages
+
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
 
