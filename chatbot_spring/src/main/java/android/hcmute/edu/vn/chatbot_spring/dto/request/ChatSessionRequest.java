@@ -6,4 +6,5 @@ import lombok.Data;
 public class ChatSessionRequest {
     private String sessionTitle;
     private int userId;
+    private int sessionId;
 }

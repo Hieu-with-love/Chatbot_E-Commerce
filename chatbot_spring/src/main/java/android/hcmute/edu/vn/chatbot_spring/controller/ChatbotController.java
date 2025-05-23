@@ -1,5 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.controller;
 
+import android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
@@ -37,6 +39,7 @@ public class ChatbotController {
     public ResponseEntity<?> startChatSession(@RequestBody ChatSessionStartRequest request) {
         try {
             ChatSessionResponse session = chatbotService.startChatSession(request);
+            chatbotService.updateChatSession(session.getId());
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(ResponseData.builder()
@@ -96,6 +99,11 @@ public class ChatbotController {
         }
     }
 
+    @GetMapping("session/get")
+    public ResponseEntity<?> getChatSession(@RequestBody ChatSessionRequest request) {
+        return ResponseEntity.ok(chatbotService.getChatSession(request));
+    }
+
     @GetMapping("/sessions/user/{userId}")
     public ResponseEntity<?> getUserChatSessions(@PathVariable Integer userId) {
         try {
@@ -134,6 +142,59 @@ public class ChatbotController {
                     .body(ResponseData.builder()
                             .status(400)
                             .message("Failed to end chat session: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    @GetMapping("/session/exists")
+    public ResponseEntity<?> checkExistsAnyChatSessionByToken(@RequestParam String token) {
+        try {
+            ChatSessionResponse exists = chatbotService.existsAnyChatSessionByToken(token);
+            return ResponseEntity.ok(
+                    ResponseData.builder()
+                            .status(200)
+                            .message("Check chat session existence successfully")
+                            .data(exists)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseData.builder()
+                            .status(400)
+                            .message("Failed to check chat session existence: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    /**
+     * Get a chat session with all related messages by sessionId and userId
+     * 
+     * @param sessionId The session ID
+     * @param userId The user ID
+     * @return Response containing the session with all messages
+     */
+    @GetMapping("/session/{sessionId}/user/{userId}")
+    public ResponseEntity<?> getChatSessionWithMessages(
+            @PathVariable Integer sessionId,
+            @PathVariable Integer userId) {
+        try {
+            android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto session = 
+                    chatbotService.getChatSessionWithMessages(sessionId, userId);
+            
+            return ResponseEntity.ok(
+                    ResponseData.builder()
+                            .status(200)
+                            .message("Chat session with messages retrieved successfully")
+                            .data(session)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ResponseData.builder()
+                            .status(404)
+                            .message("Failed to retrieve chat session: " + e.getMessage())
                             .build());
         }
     }
