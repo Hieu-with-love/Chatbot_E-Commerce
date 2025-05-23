@@ -9,4 +9,5 @@ public interface AuthService {
     boolean verifyOtp(String otp);
     boolean resetPassword(String email, String password);
     boolean logout(String token);
+
 }
