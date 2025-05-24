@@ -1,56 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F9F9F9"
-    tools:context=".fragments.CartFragment">
+    android:background="@color/background_soft"
+    android:padding="16dp">
 
+    <!-- TextView hiển thị khi giỏ hàng trống -->
     <TextView
+        android:id="@+id/text_empty_cart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Giỏ hàng"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:text="Giỏ hàng trống"
+        android:textAlignment="center"
         android:textColor="@color/text_primary"
-        android:padding="10dp"/>
+        android:textSize="18sp"
+        android:padding="16dp"
+        android:visibility="gone" />
 
+    <!-- RecyclerView cho danh sách giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_cart_items"
+        android:id="@+id/recycler_view_cart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"
-        tools:listitem="@layout/cart_item" />
+        android:background="@color/card_background" />
 
+    <!-- Tổng giá trị giỏ hàng -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:padding="16dp"
-        android:background="@android:color/white"
-        android:elevation="4dp">
+        android:background="@color/card_background_elevated"
+        android:layout_marginTop="8dp">
 
         <TextView
-            android:id="@+id/tv_total_price"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Total: $0.00"
-            android:textStyle="bold"
+            android:layout_weight="1"
+            android:text="Tổng cộng:"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
-            android:textColor="#212121" />
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/text_total_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 VNĐ"
+            android:textColor="@color/accent"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Nút thanh toán và xóa toàn bộ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/button_clear_cart"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Xóa Tất Cả"
+            android:textColor="@color/button_text"
+            android:backgroundTint="@color/error"
+            android:layout_marginEnd="8dp" />
 
         <Button
             android:id="@+id/button_checkout"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Tạo đơn hàng"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/button_background"
-            android:layout_marginTop="12dp"
-            android:paddingVertical="12dp"/>
+            android:layout_weight="1"
+            android:text="Thanh Toán"
+            android:textColor="@color/button_text"
+            android:backgroundTint="@color/button_background" />
+
     </LinearLayout>
 </LinearLayout>

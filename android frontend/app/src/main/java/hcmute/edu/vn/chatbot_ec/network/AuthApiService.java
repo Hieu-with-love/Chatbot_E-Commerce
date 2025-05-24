@@ -4,6 +4,7 @@ import hcmute.edu.vn.chatbot_ec.request.LoginRequest;
 import hcmute.edu.vn.chatbot_ec.request.RegisterRequest;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.response.AuthResponse;
+import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -27,5 +28,5 @@ public interface AuthApiService {
      * @return ResponseData with user information if authenticated
      */
     @GET("/api/v1/auth/me")
-    Call<ResponseData> getCurrentUser();
+    Call<ResponseData<UserResponse>> getCurrentUser();
 }
