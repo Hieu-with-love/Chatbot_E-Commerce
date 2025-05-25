@@ -1,10 +1,8 @@
 package hcmute.edu.vn.chatbot_ec.adapter;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,7 +32,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     private Integer userId;
     private CartApiService apiService;
     private OnCartUpdatedListener onCartUpdatedListener;
-    private final Fragment fragment; // Store Fragment for Glide
+    private final Fragment fragment;
 
     public CartAdapter(List<CartItemResponse> cartItems, Integer userId, Fragment fragment) {
         this.cartItems = cartItems;
@@ -163,7 +161,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         TextView textQuantity;
         MaterialButton buttonIncrease;
         MaterialButton buttonDecrease;
-        ImageButton buttonRemove;
+        MaterialButton buttonRemove;
 
         public ViewHolder(View itemView) {
             super(itemView);

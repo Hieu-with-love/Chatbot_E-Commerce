@@ -1,7 +1,11 @@
 package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
 import android.hcmute.edu.vn.chatbot_spring.configuration.JwtProvider;
+
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
+
+import android.hcmute.edu.vn.chatbot_spring.dto.response.UserDetailResponse;
+
 import android.hcmute.edu.vn.chatbot_spring.dto.response.UserResponse;
 import android.hcmute.edu.vn.chatbot_spring.mapper.UserMapper;
 import android.hcmute.edu.vn.chatbot_spring.model.User;
@@ -36,4 +40,25 @@ public class UserServiceImpl implements UserService {
                 .role(user.getRole())
                 .build();
     }
+
+    @Override
+    public UserDetailResponse getUserById(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return this.convertToDetailResponse(user);
+    }
+
+    private UserDetailResponse convertToDetailResponse(User user) {
+        UserDetailResponse response = new UserDetailResponse();
+        response.setId(user.getId());
+        response.setFullName(user.getFullName());
+        response.setPhone(user.getPhone());
+        response.setEmail(user.getEmail());
+        response.setAvatarUrl(user.getAvatarUrl());
+        response.setRole(user.getRole());
+        response.setVerified(user.isVerified());
+        return response;
+    }
 }
+

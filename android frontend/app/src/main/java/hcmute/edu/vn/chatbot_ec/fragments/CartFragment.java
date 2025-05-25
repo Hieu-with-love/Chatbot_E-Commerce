@@ -1,17 +1,18 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textview.MaterialTextView;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +33,11 @@ import retrofit2.Response;
 public class CartFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private TextView textTotalPrice;
-    private TextView textEmptyCart;
-    private Button buttonCheckout;
-    private Button buttonClearCart;
+    private MaterialTextView textTotalPrice;
+    private MaterialTextView textEmptyCart;
+    private MaterialButton buttonCheckout;
+    private MaterialButton buttonClearCart;
+    private MaterialButton buttonShopNow;
     private CartAdapter cartAdapter;
     private List<CartItemResponse> cartItems;
     private CartApiService cartApiService;
@@ -46,48 +48,54 @@ public class CartFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
 
+        // Initialize UI components
         recyclerView = view.findViewById(R.id.recycler_view_cart);
         textTotalPrice = view.findViewById(R.id.text_total_price);
         textEmptyCart = view.findViewById(R.id.text_empty_cart);
         buttonCheckout = view.findViewById(R.id.button_checkout);
         buttonClearCart = view.findViewById(R.id.button_clear_cart);
+        buttonShopNow = view.findViewById(R.id.button_shop_now);
 
         cartApiService = ApiClient.getCartApiService();
         userApiService = ApiClient.getUserApiService();
         cartItems = new ArrayList<>();
 
-        // Initialize RecyclerView
+        // Initialize RecyclerView with LinearLayoutManager only (no adapter yet)
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        cartAdapter = new CartAdapter(cartItems, null, this); // Pass Fragment to adapter
-        recyclerView.setAdapter(cartAdapter);
 
-        // Set listener for cart updates
-        cartAdapter.setOnCartUpdatedListener(updatedCartItems -> {
-            if (isAdded()) { // Check if Fragment is attached
-                cartItems.clear();
-                cartItems.addAll(updatedCartItems);
-                cartAdapter.notifyDataSetChanged();
-                updateTotalPrice();
-                updateCartVisibility();
+        // Handle shop now button
+        buttonShopNow.setOnClickListener(v -> {
+            if (isAdded() && getActivity() != null) {
+                getActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .addToBackStack(null)
+                        .commit();
             }
         });
 
-        // Fetch userId from API
+        // Check token and fetch userId
         String token = TokenManager.getToken(getContext());
         if (token == null) {
-            Toast.makeText(getContext(), "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
-            updateCartVisibility();
+            if (isAdded()) {
+                textEmptyCart.setText("Vui lòng đăng nhập để xem giỏ hàng");
+                updateCartVisibility();
+                Toast.makeText(getContext(), "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            }
             return view;
         }
 
+        // Fetch userId and initialize adapter in callback
         userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-                if (isAdded() && getContext() != null) { // Check if Fragment is attached
+                if (isAdded() && getContext() != null) {
                     if (response.isSuccessful() && response.body() != null) {
                         userId = response.body().getUserId();
-                        cartAdapter = new CartAdapter(cartItems, userId, CartFragment.this); // Reinitialize adapter with userId
+                        // Initialize CartAdapter with userId
+                        cartAdapter = new CartAdapter(cartItems, userId, CartFragment.this);
                         recyclerView.setAdapter(cartAdapter);
+                        // Set listener for cart updates
                         cartAdapter.setOnCartUpdatedListener(updatedCartItems -> {
                             if (isAdded()) {
                                 cartItems.clear();
@@ -99,8 +107,9 @@ public class CartFragment extends Fragment {
                         });
                         fetchCart();
                     } else {
-                        Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                        textEmptyCart.setText("Không thể lấy thông tin người dùng. Vui lòng thử lại.");
                         updateCartVisibility();
+                        Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -108,14 +117,16 @@ public class CartFragment extends Fragment {
             @Override
             public void onFailure(Call<UserResponse> call, Throwable t) {
                 if (isAdded() && getContext() != null) {
-                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    textEmptyCart.setText("Lỗi kết nối. Vui lòng kiểm tra mạng.");
                     updateCartVisibility();
+                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
         // Handle checkout button
         buttonCheckout.setOnClickListener(v -> {
+            if (!isAdded() || getContext() == null) return;
             if (userId == null) {
                 Toast.makeText(getContext(), "Vui lòng đăng nhập để thanh toán", Toast.LENGTH_SHORT).show();
                 return;
@@ -129,6 +140,7 @@ public class CartFragment extends Fragment {
 
         // Handle clear cart button
         buttonClearCart.setOnClickListener(v -> {
+            if (!isAdded() || getContext() == null) return;
             if (userId == null) {
                 Toast.makeText(getContext(), "Vui lòng đăng nhập để xóa giỏ hàng", Toast.LENGTH_SHORT).show();
                 return;
@@ -151,9 +163,14 @@ public class CartFragment extends Fragment {
                         cartAdapter.notifyDataSetChanged();
                         updateTotalPrice();
                         updateCartVisibility();
+                        if (cartItems.isEmpty()) {
+                            textEmptyCart.setText("Giỏ hàng trống. Hãy thêm sản phẩm!");
+                            Toast.makeText(getContext(), "Giỏ hàng trống", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(getContext(), "Không thể tải giỏ hàng", Toast.LENGTH_SHORT).show();
+                        textEmptyCart.setText("Không thể tải giỏ hàng. Vui lòng thử lại.");
                         updateCartVisibility();
+                        Toast.makeText(getContext(), "Không thể tải giỏ hàng", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -161,8 +178,9 @@ public class CartFragment extends Fragment {
             @Override
             public void onFailure(Call<CartResponse> call, Throwable t) {
                 if (isAdded() && getContext() != null) {
-                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    textEmptyCart.setText("Lỗi kết nối. Vui lòng kiểm tra mạng.");
                     updateCartVisibility();
+                    Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -180,6 +198,7 @@ public class CartFragment extends Fragment {
                         cartAdapter.notifyDataSetChanged();
                         updateTotalPrice();
                         updateCartVisibility();
+                        textEmptyCart.setText("Giỏ hàng trống. Hãy thêm sản phẩm!");
                         Toast.makeText(getContext(), "Đã xóa toàn bộ giỏ hàng", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getContext(), "Không thể xóa giỏ hàng", Toast.LENGTH_SHORT).show();
@@ -209,6 +228,7 @@ public class CartFragment extends Fragment {
     private void updateCartVisibility() {
         boolean isCartEmpty = cartItems.isEmpty();
         textEmptyCart.setVisibility(isCartEmpty ? View.VISIBLE : View.GONE);
+        buttonShopNow.setVisibility(isCartEmpty ? View.VISIBLE : View.GONE);
         recyclerView.setVisibility(isCartEmpty ? View.GONE : View.VISIBLE);
         textTotalPrice.setVisibility(isCartEmpty ? View.GONE : View.VISIBLE);
         buttonCheckout.setVisibility(isCartEmpty ? View.GONE : View.VISIBLE);

@@ -14,6 +14,9 @@ public class ProductResponse {
     private Integer id;
     private String name;
     private String description;
+    private Integer stock;
+    private String color;
+    private String size;
     private BigDecimal price;
     private String thumbnailUrl;
     private List<ProductImageResponse> productImages;
