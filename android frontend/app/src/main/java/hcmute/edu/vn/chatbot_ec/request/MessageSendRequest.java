@@ -41,9 +41,7 @@ public class MessageSendRequest {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Integer getUserId(Integer userId) {
+    }    public Integer getUserId() {
         return this.userId;
     }
 

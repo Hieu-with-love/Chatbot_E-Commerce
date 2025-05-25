@@ -91,9 +91,17 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 " - Using URL: " + baseUrl);
 
         btnGeneratePrompt.setOnClickListener(v -> {
-            String requestFromUser = generateRequest();
-            if (requestFromUser != null) {
-                generateResponse(requestFromUser);
+            String userInput = edtPrompt.getText().toString();
+            if (userInput!=null){
+                // Hiển thị ngay nội dung người dùng lên giao diện
+                addMessageToChat(userInput, Message.SENT_BY_USER);
+                edtPrompt.setText(""); // Xoá ô nhập
+
+                // Gửi nội dung người dùng đi (chứa API call bên trong)
+                generateRequest(userInput);
+
+                // Gọi hàm xử lý tiếp nếu cần
+                generateResponse(userInput);
             }
         });
         
@@ -157,8 +165,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         recyclerView.setAdapter(chatAdapter);
     }
 
-    private String generateRequest() {
-        String userInput = edtPrompt.getText().toString();
+    private void generateRequest(String userInput) {
         Log.d("GeminiAPI", "User Input: " + userInput);
 
         if (!userInput.isEmpty()) {
@@ -172,18 +179,18 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     req.setSender(SENDER.USER.getValue());
                     assert response.body() != null;
                     req.setSessionId(response.body().getChatSessionId());
-                    req.getUserId(response.body().getUserId());
+                    req.setUserId(response.body().getUserId());
 
-                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<ResponseData<MessageResponse>>() {
                         @Override
-                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                        public void onResponse(retrofit2.Call<ResponseData<MessageResponse>> call, retrofit2.Response<ResponseData<MessageResponse>> response) {
                             Log.d("GeminiAPI", "Response from Gemini: " + response.body());
                             welcomeMessageShown = true;
                         }
 
                         @Override
-                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
-
+                        public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
+                            Log.e("GeminiAPI", "Error in processing message", t);
                         }
                     });
                 }
@@ -193,15 +200,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 }
             });
 
-            // Add user message to the chat by user sender
-            addMessageToChat(userInput, Message.SENT_BY_USER);
-            
-            // Clear input field
-            edtPrompt.setText("");
-            
-            return userInput;
+
         }
-        return null;
     }
 
     private void generateUserIntent(String originalPrompt, IntentCallback callback) {
@@ -430,15 +430,16 @@ public class ChatGeminiActivity extends AppCompatActivity {
                                     req.setSessionId(response.body().getChatSessionId());
                                     req.setUserId(response.body().getUserId());
 
-                                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<ResponseData<MessageResponse>>() {
                                         @Override
-                                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
-                                            Log.d("GeminiAPI", "Response from Gemini at final response: " + response.body());
-                                            welcomeMessageShown = true;
+                                        public void onResponse(retrofit2.Call<ResponseData<MessageResponse>> call, retrofit2.Response<ResponseData<MessageResponse>> response) {
+                                            Log.d("GeminiAPI", "Bot message saved with ID: " + 
+                                                (response.isSuccessful() && response.body() != null && response.body().getData() != null ? 
+                                                response.body().getData().getId() : "unknown"));
                                         }
 
                                         @Override
-                                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
+                                        public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
 
                                         }
                                     });
@@ -497,35 +498,27 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void startNewChatSession() {
         String token = TokenManager.getToken(this);
 
-        chatbotApiService.checkExistsChatSession(token).enqueue(new retrofit2.Callback<ChatSessionResponse>() {
+        chatbotApiService.checkExistsChatSession(token).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
             @Override
-            public void onResponse(retrofit2.Call<ChatSessionResponse> call, retrofit2.Response<ChatSessionResponse> response) {                if (response.isSuccessful() && response.body().isFirstSession()){
-                    Integer userId = response.body().getUserId();
-                    // Use default user ID if null
-                    createNewChatSession(userId != null ? userId : 1);
-                    Log.d("App", "New session created" + response.body());
+            public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
+                assert response.body()!=null;
+
+                if (response.body().getData().isHasSession()){
+                    openChatSession(response.body().getData().getChatSessionId(), response.body().getData().getUserId());
                 }
-                else if (response.isSuccessful() && !response.body().isFirstSession()){
-                    Log.d("App", "Session exists" + response.body());
-                    Integer userId = response.body().getUserId();
-                    // Use default user ID if null
-                    openChatSession(1, userId != null ? userId : 4);
-                    Log.d("App", "Session exists");
+                else {
+                    createNewChatSession(response.body().getData().getUserId());
                 }
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ChatSessionResponse> call, Throwable t) {
-                Log.e("ChatSession", "Failed to check chat session", t);
-                Toast.makeText(ChatGeminiActivity.this, 
-                    "Connection error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                // Create a new session as fallback
-                createNewChatSession(1); // Default user ID as fallback
+            public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
+                Log.d("ChatSession", "Error checking session: " + t.getMessage());
             }
         });
     }
 
-    private void openChatSession(Integer sessionId, int userId) {
+    private void openChatSession(int sessionId, int userId) {
         // Use the new direct endpoint to get session with messages
         chatbotApiService.getChatSessionWithMessages(sessionId, userId).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
             @Override
@@ -583,21 +576,26 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 showWelcomeMessage();
             }
         });
-    }
-
-    private void createNewChatSession(int userId) {
+    }    private void createNewChatSession(int userId) {
         ChatSessionStartRequest req = new ChatSessionStartRequest(userId, "New Chat Session");
 
-        chatbotApiService.startChatSession(req).enqueue(new retrofit2.Callback<ChatSessionResponse>() {
+        chatbotApiService.startChatSession(req).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
             @Override
-            public void onResponse(retrofit2.Call<ChatSessionResponse> call, retrofit2.Response<ChatSessionResponse> response) {
+            public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
                 messageList.clear();
                 showWelcomeMessage();
+                if (response.isSuccessful() && response.body() != null) {
+                    Log.d("ChatSession", "New chat session created with ID: " + 
+                        (response.body().getData() != null ? response.body().getData().getChatSessionId() : "unknown"));
+                }
             }
 
             @Override
-            public void onFailure(retrofit2.Call<ChatSessionResponse> call, Throwable t) {
-
+            public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
+                Log.e("ChatSession", "Failed to create new chat session", t);
+                Toast.makeText(ChatGeminiActivity.this, 
+                    "Failed to create chat session: " + t.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -610,23 +608,22 @@ public class ChatGeminiActivity extends AppCompatActivity {
             userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
                 @Override
                 public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
-                    MessageSendRequest req = new MessageSendRequest();
-                    req.setContent(welcomeMessage);
+                    MessageSendRequest req = new MessageSendRequest();                    req.setContent(welcomeMessage);
                     req.setSender(SENDER.BOT.getValue());
                     assert response.body() != null;
                     req.setSessionId(response.body().getChatSessionId());
-                    req.getUserId(response.body().getUserId());
+                    req.setUserId(response.body().getUserId());
 
-                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<MessageResponse>() {
+                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<ResponseData<MessageResponse>>() {
                         @Override
-                        public void onResponse(retrofit2.Call<MessageResponse> call, retrofit2.Response<MessageResponse> response) {
+                        public void onResponse(retrofit2.Call<ResponseData<MessageResponse>> call, retrofit2.Response<ResponseData<MessageResponse>> response) {
                             addMessageToChat(welcomeMessage, Message.SENT_BY_BOT);
                             welcomeMessageShown = true;
                         }
 
                         @Override
-                        public void onFailure(retrofit2.Call<MessageResponse> call, Throwable t) {
-
+                        public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
+                            Log.e("GeminiAPI", "Error sending welcome message", t);
                         }
                     });
                 }
