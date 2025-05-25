@@ -26,12 +26,12 @@
             android:name=".activity.RegisterActivity"
             android:exported="false"
             android:theme="@style/Theme.Chatbotec.NoActionBar" />
-        <activity
-            android:name=".activity.UserProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".activity.ProductDetailActivity"
-            android:exported="false" />
+<!--        <activity-->
+<!--            android:name=".activity.UserProfileActivity"-->
+<!--            android:exported="false" />-->
+<!--        <activity-->
+<!--            android:name=".activity.ProductDetailActivity"-->
+<!--            android:exported="false" />-->
         <activity
             android:name=".MainActivity"
             android:exported="false" />

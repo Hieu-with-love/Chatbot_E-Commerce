@@ -32,7 +32,6 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private TextView textViewProducts;
     private Button btnSaveProduct, btnShowProducts;
-
     private BottomNavigationView bottomNavigationView;
 
     @Override
@@ -40,10 +39,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        initViews();
-        bottomNavigationView = findViewById(R.id.bottomNavView);
-        loadFragment(new HomeFragment());
 
+        bottomNavigationView = findViewById(R.id.bottomNavView);
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -56,20 +53,23 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_chat) {
                     Intent chatIntent = new Intent(MainActivity.this, ChatGeminiActivity.class);
                     startActivity(chatIntent);
+                    return false; // Return false since we're starting an activity, not loading a fragment
                 } else if (id == R.id.nav_user) {
                     selectedFragment = new UserFragment();
                 }
                 if (selectedFragment != null) {
-                    getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, selectedFragment)
-                            .commit();
+                    loadFragment(selectedFragment);
                     return true;
                 }
                 return false;
             }
         });
 
+        // Default to CartFragment if no saved state
+        if (savedInstanceState == null) {
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            loadFragment(new HomeFragment());
+        }
     }
 
     private void loadFragment(Fragment fragment) {
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    private void register(){
+    private void register() {
         RegisterRequest request = new RegisterRequest(
                 "abc@example.com",
                 "Nguyen Van A",
@@ -89,26 +89,19 @@ public class MainActivity extends AppCompatActivity {
         );
 
         AuthApiService authApiService = ApiClient.getAuthApiService();
-
         authApiService.register(request).enqueue(
                 new Callback<ResponseData>() {
                     @Override
                     public void onResponse(Call<ResponseData> call, Response<ResponseData> response) {
-                        Toast.makeText(MainActivity.this, "Register success" + response.body().getData(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Register success: " + response.body().getData(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(Call<ResponseData> call, Throwable t) {
-                        Toast.makeText(MainActivity.this, "Register failed" + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Register failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                         Log.e("Register failed", t.getMessage());
-                    };
+                    }
                 }
         );
-    }
-
-    private void initViews(){
-//        textViewProducts = findViewById(R.id.tv_products);
-//        btnSaveProduct = findViewById(R.id.btn_saveProduct);
-//        btnShowProducts = findViewById(R.id.btn_showProducts);
     }
 }
