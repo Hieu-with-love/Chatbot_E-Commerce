@@ -1,84 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background_soft"
     android:padding="16dp">
 
     <!-- TextView hiển thị khi giỏ hàng trống -->
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_empty_cart"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Giỏ hàng trống"
         android:textAlignment="center"
         android:textColor="@color/text_primary"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:padding="16dp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/button_shop_now"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Nút "Mua sắm ngay" khi giỏ hàng trống -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_shop_now"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mua sắm ngay"
+        android:textColor="@color/button_text"
+        app:backgroundTint="@color/button_background"
+        app:cornerRadius="8dp"
+        app:rippleColor="@color/button_background_pressed"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/text_empty_cart"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
 
     <!-- RecyclerView cho danh sách giỏ hàng -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_cart"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/total_price_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:background="@color/card_background" />
 
-    <!-- Tổng giá trị giỏ hàng -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Container cho tổng giá trị -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/total_price_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="@color/card_background_elevated"
-        android:layout_marginTop="8dp">
+        app:cardBackgroundColor="@color/card_background_elevated"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp"
+        app:strokeColor="@color/divider"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toTopOf="@id/buttons_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp">
 
-        <TextView
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Tổng cộng:"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/text_total_price"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0 VNĐ"
-            android:textColor="@color/accent"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tổng cộng:"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-    <!-- Nút thanh toán và xóa toàn bộ -->
-    <LinearLayout
-        android:layout_width="match_parent"
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/text_total_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 VNĐ"
+                android:textColor="@color/accent"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Container cho các nút -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/buttons_container"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        app:cardBackgroundColor="@color/card_background_elevated"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="8dp"
+        app:strokeColor="@color/divider"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/button_clear_cart"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Xóa Tất Cả"
-            android:textColor="@color/button_text"
-            android:backgroundTint="@color/error"
-            android:layout_marginEnd="8dp" />
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/button_checkout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Thanh Toán"
-            android:textColor="@color/button_text"
-            android:backgroundTint="@color/button_background" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_clear_cart"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Xóa Tất Cả"
+                android:textColor="@color/button_text"
+                app:backgroundTint="@color/error"
+                app:cornerRadius="8dp"
+                app:rippleColor="@color/accent_dark"
+                android:layout_marginEnd="8dp" />
 
-    </LinearLayout>
-</LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_checkout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Thanh Toán"
+                android:textColor="@color/button_text"
+                app:backgroundTint="@color/button_background"
+                app:cornerRadius="8dp"
+                app:rippleColor="@color/button_background_pressed" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

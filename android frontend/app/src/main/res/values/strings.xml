@@ -29,4 +29,34 @@
     <string name="generic_error_message">An unexpected error occurred. Please try again later.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="profile_title">Hồ sơ người dùng</string>
+    <string name="email_label">Email: %s</string>
+    <string name="phone_label">Điện thoại: %s</string>
+    <string name="avatar_description">Ảnh đại diện của %s</string>
+    <string name="verified">Đã xác minh</string>
+    <string name="unverified">Chưa xác minh</string>
+    <string name="edit_profile">Chỉnh sửa thông tin</string>
+    <string name="address_label">Địa chỉ giao hàng</string>
+    <string name="order_history_label">Lịch sử mua hàng</string>
+
+    <!-- orders strings -->
+    <string name="order_history_title">Lịch sử đơn hàng</string>
+    <string name="no_orders">Chưa có đơn hàng nào</string>
+    <string name="please_login">Vui lòng đăng nhập để xem đơn hàng</string>
+    <string name="error_user_info">Không thể lấy thông tin người dùng</string>
+    <string name="error_load_orders">Không thể tải danh sách đơn hàng</string>
+    <string name="connection_error">Lỗi kết nối</string>
+    <string name="connection_error_message">Lỗi kết nối: %s</string>
+    <string name="order_date_format">Ngày đặt: %s</string>
+    <string name="order_status_format">Trạng thái: %s</string>
+    <string name="shipping_address_format">Địa chỉ: %s</string>
+    <string name="shipping_phone_format">SĐT: %s</string>
+    <string name="total_price_format">Tổng: %s VNĐ</string>
+    <string name="quantity_format">x%s</string>
+    <string name="price_format">%s VNĐ</string>
+    <string name="product_image_description">Hình ảnh của %s</string>
+    <string name="order_description">Đơn hàng số %d</string>
+    <string name="orders_list_description">Danh sách đơn hàng của bạn</string>
 </resources>

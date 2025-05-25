@@ -120,6 +120,17 @@ public class ApiClient extends Application {
         }
         return retrofit.create(CartApiService.class);
     }
+
+    public static OrderApiService getOrderApiService() {
+        if (retrofit == null) {
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(getBaseUrl())
+                    .client(getHttpClient())
+                    .addConverterFactory(GsonConverterFactory.create(createGson()))
+                    .build();
+        }
+        return retrofit.create(OrderApiService.class);
+    }
     
     /**
      * Forces the API client to use the physical device URL and resets the Retrofit instance.
