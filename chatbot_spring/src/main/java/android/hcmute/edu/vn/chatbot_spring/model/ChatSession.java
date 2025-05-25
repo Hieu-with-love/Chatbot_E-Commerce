@@ -30,8 +30,8 @@ public class ChatSession {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
-    @Column(name = "is_first_session")
-    private Boolean firstSession;
+    @Column(name = "has_session")
+    private Boolean hasSession;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

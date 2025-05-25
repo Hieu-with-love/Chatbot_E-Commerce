@@ -20,6 +20,7 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Lob
     private String content;
 
     @Enumerated(EnumType.STRING)
