@@ -26,8 +26,11 @@ public class ChatSessionResponse {
     @SerializedName("messages")
     private List<MessageResponse> messages;
 
-    @SerializedName("isFirstSession")
-    private boolean isFirstSession;
+    @SerializedName("hasSession")
+    private boolean hasSession;
+
+    @SerializedName("chatSessionId")
+    private Integer chatSessionId;
     
     public ChatSessionResponse() {
     }
@@ -88,11 +91,19 @@ public class ChatSessionResponse {
         this.messages = messages;
     }
 
-    public boolean isFirstSession() {
-        return isFirstSession;
+    public boolean isHasSession() {
+        return hasSession;
     }
 
-    public void setFirstSession(boolean firstSession) {
-        isFirstSession = firstSession;
+    public void setHasSession(boolean hasSession) {
+        this.hasSession = hasSession;
+    }
+
+    public Integer getChatSessionId() {
+        return chatSessionId;
+    }
+
+    public void setChatSessionId(Integer chatSessionId) {
+        this.chatSessionId = chatSessionId;
     }
 }

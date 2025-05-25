@@ -23,25 +23,25 @@ import retrofit2.http.Query;
 public interface ChatbotApiService {
     
     @POST("/api/v1/chatbot/start")
-    Call<ChatSessionResponse> startChatSession(@Body ChatSessionStartRequest request);
+    Call<ResponseData<ChatSessionResponse>> startChatSession(@Body ChatSessionStartRequest request);
     
     @POST("/api/v1/chatbot/send")
-    Call<MessageResponse> processMessage(@Body MessageSendRequest request);
+    Call<ResponseData<MessageResponse>> processMessage(@Body MessageSendRequest request);
     
     @GET("/api/v1/chatbot/session/{sessionId}")
-    Call<ChatSessionResponse> getChatSessionById(@Path("sessionId") Integer sessionId);
+    Call<ResponseData<ChatSessionResponse>> getChatSessionById(@Path("sessionId") Integer sessionId);
     
     @GET("/api/v1/chatbot/sessions/user/{userId}")
-    Call<List<ChatSessionResponse>> getChatSessionsByUserId(@Path("userId") Integer userId);
+    Call<ResponseData<List<ChatSessionResponse>>> getChatSessionsByUserId(@Path("userId") Integer userId);
     
     @PUT("/api/v1/chatbot/session/{sessionId}/end")
-    Call<ChatSessionResponse> endChatSession(@Path("sessionId") Integer sessionId);
+    Call<ResponseData<ChatSessionResponse>> endChatSession(@Path("sessionId") Integer sessionId);
     
     @POST("chat/message/save")
-    Call<Message> saveMessage(@Body Message message);
+    Call<ResponseData<Message>> saveMessage(@Body Message message);
 
     @GET("/api/v1/chatbot/session/exists")
-    Call<ChatSessionResponse> checkExistsChatSession(@Query("token") String token);
+    Call<ResponseData<ChatSessionResponse>> checkExistsChatSession(@Query("token") String token);
 
     @POST("/api/v1/chatbot/session/get")
     Call<ResponseData<ChatSessionResponse>> getChatSession(@Body ChatSessionRequest request);
