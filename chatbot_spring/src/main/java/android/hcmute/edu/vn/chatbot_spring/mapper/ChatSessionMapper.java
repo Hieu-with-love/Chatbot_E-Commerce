@@ -1,53 +1,63 @@
 package android.hcmute.edu.vn.chatbot_spring.mapper;
 
-import android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto;
-import android.hcmute.edu.vn.chatbot_spring.dto.MessageDto;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
 import android.hcmute.edu.vn.chatbot_spring.model.ChatSession;
 import android.hcmute.edu.vn.chatbot_spring.model.Message;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ChatSessionMapper {
-
-    /**
-     * Convert a ChatSession entity to a ChatSessionDto
+public class ChatSessionMapper {    /**
+     * Convert a ChatSession entity to a ChatSessionResponse
      * @param session The chat session entity
      * @param messages List of messages associated with this session
-     * @return ChatSessionDto object
+     * @return ChatSessionResponse object
      */
-    public static ChatSessionDto toDto(ChatSession session, List<Message> messages) {
+    public static ChatSessionResponse toResponse(ChatSession session, List<Message> messages) {
         if (session == null) {
             return null;
         }
 
-        return ChatSessionDto.builder()
+        return ChatSessionResponse.builder()
                 .id(session.getId())
                 .sessionTitle(session.getSessionTitle())
                 .startedAt(session.getStartedAt())
                 .endedAt(session.getEndedAt())
                 .userId(session.getUser().getId())
                 .userName(session.getUser().getFullName())
-                .messages(messages.stream().map(ChatSessionMapper::toMessageDto).collect(Collectors.toList()))
+                .messages(messages.stream()
+                        .map(ChatSessionMapper::toMessageResponse)
+                        .collect(Collectors.toList()))
+                .chatSessionId(session.getId())
                 .build();
-    }
-
-    /**
-     * Convert a Message entity to a MessageDto
+    }    /**
+     * Convert a Message entity to a MessageResponse
      * @param message The message entity
-     * @return MessageDto object
-     */
-    public static MessageDto toMessageDto(Message message) {
+     * @return MessageResponse object
+     */    public static MessageResponse toMessageResponse(Message message) {
         if (message == null) {
             return null;
         }
 
-        return MessageDto.builder()
+        return MessageResponse.builder()
                 .id(message.getId())
                 .content(message.getContent())
-                .sender(message.getSender().getValue()) // Assuming SENDER enum has getValue() method
+                .sender(message.getSender().getValue())
                 .sentTime(message.getSentTime())
                 .intentType(message.getIntentType())
                 .build();
+    }
+    
+    /**
+     * Convert a Message entity to be included in a ChatSessionResponse
+     * @param message The message entity
+     * @return MessageResponse object
+     * 
+     * @deprecated Use MessageMapStruct.toResponse instead
+     */
+    @Deprecated
+    private static MessageResponse convertToChatSessionResponse(Message message) {
+        return toMessageResponse(message);
     }
 }

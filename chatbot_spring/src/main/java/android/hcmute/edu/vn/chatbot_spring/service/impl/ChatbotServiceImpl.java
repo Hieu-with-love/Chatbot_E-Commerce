@@ -8,6 +8,8 @@ import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
 import android.hcmute.edu.vn.chatbot_spring.enums.SENDER;
 import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
+import android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapStruct;
+import android.hcmute.edu.vn.chatbot_spring.mapper.MessageMapStruct;
 import android.hcmute.edu.vn.chatbot_spring.model.ChatSession;
 import android.hcmute.edu.vn.chatbot_spring.model.Message;
 import android.hcmute.edu.vn.chatbot_spring.model.User;
@@ -16,6 +18,7 @@ import android.hcmute.edu.vn.chatbot_spring.repository.MessageRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.UserRepository;
 import android.hcmute.edu.vn.chatbot_spring.service.ChatbotService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,18 +28,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatbotServiceImpl implements ChatbotService {
-
     private final ChatSessionRepository chatSessionRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     
-    // Import the mapper
-    private final android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper chatSessionMapper = new android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper();
-
+    // MapStruct mappers
+    private final ChatSessionMapStruct chatSessionMapper;
+    private final MessageMapStruct messageMapper;
+    
     @Override
     @Transactional
     public ChatSessionResponse startChatSession(ChatSessionStartRequest request) {
@@ -45,21 +49,21 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         String sessionTitle = request.getSessionTitle();
         if (sessionTitle == null || sessionTitle.trim().isEmpty()) {
-            sessionTitle = "Chat Session " + LocalDateTime.now().toString();
+            sessionTitle = "Chat Session " + LocalDateTime.now().toString() + "of " + user.getFullName();
         }
 
-        ChatSession chatSession = ChatSession.builder()
-                .sessionTitle(sessionTitle)
-                .startedAt(LocalDateTime.now())
-                .user(user)
-                .messages(new ArrayList<>())
-                .firstSession(true)
-                .build();
+        // Convert request to entity using mapper
+        ChatSession chatSession = chatSessionMapper.toEntity(request);
+        chatSession.setSessionTitle(sessionTitle);
+        chatSession.setStartedAt(LocalDateTime.now());
+        chatSession.setUser(user);
+        chatSession.setMessages(new ArrayList<>());
+        chatSession.setHasSession(false);
 
         ChatSession savedSession = chatSessionRepository.save(chatSession);
-        return convertToChatSessionResponse(savedSession);
+        return chatSessionMapper.toResponse(savedSession);
     }
-
+    
     @Override
     @Transactional
     public MessageResponse processMessage(MessageSendRequest request) {
@@ -72,25 +76,19 @@ public class ChatbotServiceImpl implements ChatbotService {
             throw new ResourceNotFoundException("User does not own this chat session");
         }
 
-        // Save user message
-        Message userMessage = Message.builder()
-                .content(request.getContent())
-                .sender(SENDER.fromValue(request.getSender()))
-                .sentTime(LocalDateTime.now())
-                .chatSession(chatSession)
-                .build();
-
-        userMessage = messageRepository.save(userMessage);
-
-        return convertToMessageResponse(userMessage);
+        // Convert request to entity and save user message
+        Message userMessage = messageMapper.toEntity(request);
+        userMessage.setChatSession(chatSession); // Ensure proper session assignment
+        userMessage = messageRepository.save(userMessage);        return messageMapper.toResponse(userMessage);
     }
-
+    
     @Override
     public ChatSessionResponse getChatSessionById(Integer sessionId) {
         ChatSession chatSession = chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + sessionId));
-
-        return convertToChatSessionResponse(chatSession);
+        
+        List<Message> messages = messageRepository.findBySessionIdAndSentTimeAsc(sessionId);
+        return chatSessionMapper.toResponseWithMessages(chatSession, messages);
     }
 
     @Override
@@ -100,7 +98,10 @@ public class ChatbotServiceImpl implements ChatbotService {
                 
         List<ChatSession> chatSessions = chatSessionRepository.findByUserId(userId);
         return chatSessions.stream()
-                .map(this::convertToChatSessionResponse)
+                .map(session -> {
+                    List<Message> messages = messageRepository.findBySessionIdAndSentTimeAsc(session.getId());
+                    return chatSessionMapper.toResponseWithMessages(session, messages);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -111,34 +112,43 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + sessionId));
 
         chatSession.setEndedAt(LocalDateTime.now());
-        ChatSession savedSession = chatSessionRepository.save(chatSession);
-
-        return convertToChatSessionResponse(savedSession);
+        ChatSession savedSession = chatSessionRepository.save(chatSession);        return chatSessionMapper.toResponse(savedSession);
     }
 
     @Override
     public Message saveMessage(Message message) {
         return messageRepository.save(message);
     }
-
+    
     @Override
     public ChatSessionResponse existsAnyChatSessionByToken(String token) {
         String email = jwtProvider.getEmailFromJwtToken(token);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        log.info("Checking if user {} has any chat sessions", user.getId());
+        boolean exists = chatSessionRepository.existsAnyChatSessionByUserId(user.getId());
+
+        if (exists && !user.getChatSessions().isEmpty()) {
+            return ChatSessionResponse.builder()
+                    .userId(user.getId())
+                    .hasSession(true)
+                    .chatSessionId(user.getChatSessions().get(0).getId())
+                    .build();
+        }
+
         return ChatSessionResponse.builder()
                 .userId(user.getId())
-                .isFistSession(true)
+                .hasSession(exists)
                 .build();
     }
 
     @Override
-    public Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request) {
-        return chatSessionRepository.findBySessionIdAndUserId(request.getSessionId(), request.getUserId());
+    public Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request) {        return chatSessionRepository.findBySessionIdAndUserId(request.getSessionId(), request.getUserId());
     }
-
+    
     @Override
-    public android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto getChatSessionWithMessages(Integer sessionId, Integer userId) {
+    public ChatSessionResponse getChatSessionWithMessages(Integer sessionId, Integer userId) {
         // Find the chat session that belongs to the user
         ChatSession chatSession = chatSessionRepository.findSessionByIdAndUserId(sessionId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -147,8 +157,8 @@ public class ChatbotServiceImpl implements ChatbotService {
         // Fetch all messages for this session, ordered by sentTime ascending
         List<Message> messages = messageRepository.findBySessionIdAndSentTimeAsc(sessionId);
         
-        // Use the mapper to convert to DTO
-        return android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapper.toDto(chatSession, messages);
+        // Use the MapStruct mapper to convert to DTO
+        return chatSessionMapper.toResponseWithMessages(chatSession, messages);
     }
 
     @Override
@@ -156,7 +166,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         ChatSession chatSession = chatSessionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + id));
 
-        chatSession.setFirstSession(false);
+        chatSession.setHasSession(true);
         chatSessionRepository.save(chatSession);
     }
 
@@ -178,9 +188,7 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .chatSession(userMessage.getChatSession())
                 .intentType(intentType)
                 .build();
-    }
-
-    /**
+    }    /**
      * Simple intent detection method
      * In a real application, this would be more sophisticated
      * @param content The message content
@@ -196,41 +204,5 @@ public class ChatbotServiceImpl implements ChatbotService {
             return "SUPPORT_REQUEST";
         }
         return null; // No specific intent detected
-    }
-
-    /**
-     * Convert a ChatSession entity to a ChatSessionResponse DTO
-     * @param session The chat session entity
-     * @return A DTO representing the chat session
-     */
-    private ChatSessionResponse convertToChatSessionResponse(ChatSession session) {
-        List<Message> messages = messageRepository.findBySessionIdAndSentTimeAsc(session.getId());
-
-        return ChatSessionResponse.builder()
-                .id(session.getId())
-                .sessionTitle(session.getSessionTitle())
-                .startedAt(session.getStartedAt())
-                .endedAt(session.getEndedAt())
-                .userId(session.getUser().getId())
-                .userName(session.getUser().getFullName())
-                .messages(messages.stream()
-                        .map(this::convertToMessageResponse)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    /**
-     * Convert a Message entity to a MessageResponse DTO
-     * @param message The message entity
-     * @return A DTO representing the message
-     */
-    private MessageResponse convertToMessageResponse(Message message) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .content(message.getContent())
-                .sender(message.getSender().getValue())
-                .sentTime(message.getSentTime())
-                .intentType(message.getIntentType())
-                .build();
     }
 }

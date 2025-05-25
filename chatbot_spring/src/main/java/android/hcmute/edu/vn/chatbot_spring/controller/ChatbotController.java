@@ -149,12 +149,12 @@ public class ChatbotController {
     @GetMapping("/session/exists")
     public ResponseEntity<?> checkExistsAnyChatSessionByToken(@RequestParam String token) {
         try {
-            ChatSessionResponse exists = chatbotService.existsAnyChatSessionByToken(token);
+            ChatSessionResponse session = chatbotService.existsAnyChatSessionByToken(token);
             return ResponseEntity.ok(
                     ResponseData.builder()
                             .status(200)
                             .message("Check chat session existence successfully")
-                            .data(exists)
+                            .data(session)
                             .build()
             );
         } catch (Exception e) {
@@ -179,7 +179,7 @@ public class ChatbotController {
             @PathVariable Integer sessionId,
             @PathVariable Integer userId) {
         try {
-            android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto session = 
+            ChatSessionResponse session =
                     chatbotService.getChatSessionWithMessages(sessionId, userId);
             
             return ResponseEntity.ok(

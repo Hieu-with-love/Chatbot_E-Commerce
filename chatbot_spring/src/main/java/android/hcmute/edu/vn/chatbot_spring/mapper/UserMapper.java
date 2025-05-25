@@ -8,6 +8,10 @@ public class UserMapper {
         return UserResponse.builder()
                 .chatSessionId(user.getChatSessions().get(0).getId())
                 .userId(user.getId())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .fullName(user.getFullName())
+                .role(user.getRole())
                 .build();
     }
 }

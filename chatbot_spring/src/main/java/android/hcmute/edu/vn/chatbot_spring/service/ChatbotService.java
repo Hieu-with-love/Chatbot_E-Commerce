@@ -33,7 +33,7 @@ public interface ChatbotService {
      * @param userId The user ID
      * @return ChatSessionDto containing the session and all messages
      */
-    android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto getChatSessionWithMessages(Integer sessionId, Integer userId);
+    ChatSessionResponse getChatSessionWithMessages(Integer sessionId, Integer userId);
 
     void updateChatSession(Integer id);
 }
