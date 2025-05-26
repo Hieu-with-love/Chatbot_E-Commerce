@@ -1,5 +1,6 @@
 package android.hcmute.edu.vn.chatbot_spring.model;
 
+import android.hcmute.edu.vn.chatbot_spring.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -26,7 +27,11 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Column(name = "status", nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
+
+    @Column(name = "recipient_name", nullable = false)
+    private String recipientName;
 
     @Column(name = "shipping_address", nullable = false)
     private String shippingAddress;

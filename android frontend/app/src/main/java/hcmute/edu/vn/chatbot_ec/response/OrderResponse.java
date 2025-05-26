@@ -9,6 +9,8 @@ public class OrderResponse {
     private Integer userId;
     private LocalDateTime orderDate;
     private String status;
+
+    private String recipientName;
     private String shippingAddress;
     private String shippingPhone;
     private BigDecimal totalPrice;
@@ -44,6 +46,14 @@ public class OrderResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRecipientName() {
+        return recipientName;
+    }
+
+    public void setRecipientName(String recipientName) {
+        this.recipientName = recipientName;
     }
 
     public String getShippingAddress() {
