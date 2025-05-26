@@ -8,6 +8,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
@@ -16,9 +18,16 @@ import hcmute.edu.vn.chatbot_ec.response.AddressResponse;
 public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressViewHolder> {
 
     private List<AddressResponse> addresses;
+    private OnAddressActionListener listener;
 
-    public AddressAdapter(List<AddressResponse> addresses) {
+    public interface OnAddressActionListener {
+        void onEdit(AddressResponse address);
+        void onDelete(AddressResponse address);
+    }
+
+    public AddressAdapter(List<AddressResponse> addresses, OnAddressActionListener listener) {
         this.addresses = addresses;
+        this.listener = listener;
     }
 
     @NonNull
@@ -34,7 +43,10 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
 
         holder.textRecipientName.setText(address.getRecipientName());
         holder.textFullAddress.setText(address.getFullAddress());
-        holder.textPhone.setText(address.getPhone());
+        holder.textPhone.setText("SĐT: " + address.getPhone());
+
+        holder.buttonEdit.setOnClickListener(v -> listener.onEdit(address));
+        holder.buttonDelete.setOnClickListener(v -> listener.onDelete(address));
     }
 
     @Override
@@ -42,14 +54,22 @@ public class AddressAdapter extends RecyclerView.Adapter<AddressAdapter.AddressV
         return addresses.size();
     }
 
+    public void updateAddresses(List<AddressResponse> newAddresses) {
+        this.addresses = newAddresses;
+        notifyDataSetChanged();
+    }
+
     static class AddressViewHolder extends RecyclerView.ViewHolder {
         TextView textRecipientName, textFullAddress, textPhone;
+        MaterialButton buttonEdit, buttonDelete;
 
         AddressViewHolder(@NonNull View itemView) {
             super(itemView);
             textRecipientName = itemView.findViewById(R.id.text_recipient_name);
             textFullAddress = itemView.findViewById(R.id.text_full_address);
             textPhone = itemView.findViewById(R.id.text_phone);
+            buttonEdit = itemView.findViewById(R.id.button_edit);
+            buttonDelete = itemView.findViewById(R.id.button_delete);
         }
     }
 }

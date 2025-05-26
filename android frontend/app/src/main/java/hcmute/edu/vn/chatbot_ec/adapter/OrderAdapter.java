@@ -48,6 +48,7 @@ public class OrderAdapter extends ListAdapter<OrderResponse, OrderAdapter.OrderV
         // Format order date
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         holder.textOrderDate.setText(holder.itemView.getContext().getString(R.string.order_date_format, order.getOrderDate().format(formatter)));
+        holder.textRecipientName.setText(holder.itemView.getContext().getString(R.string.recipient_name_format, order.getRecipientName()));
         holder.textShippingAddress.setText(holder.itemView.getContext().getString(R.string.shipping_address_format, order.getShippingAddress()));
         holder.textShippingPhone.setText(holder.itemView.getContext().getString(R.string.shipping_phone_format, order.getShippingPhone()));
         holder.textTotalPrice.setText(holder.itemView.getContext().getString(R.string.total_price_format, order.getTotalPrice().toString()));
@@ -60,6 +61,8 @@ public class OrderAdapter extends ListAdapter<OrderResponse, OrderAdapter.OrderV
             holder.textOrderStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.success));
         } else if (status.equals("PENDING")) {
             holder.textOrderStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.warning));
+        } else if (status.equals("SHIPPING")) {
+            holder.textOrderStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.info));
         } else if (status.equals("CANCELLED")) {
             holder.textOrderStatus.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.error));
         } else {
@@ -73,13 +76,14 @@ public class OrderAdapter extends ListAdapter<OrderResponse, OrderAdapter.OrderV
     }
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {
-        TextView textOrderDate, textOrderStatus, textShippingAddress, textShippingPhone, textTotalPrice;
+        TextView textOrderDate, textOrderStatus, textRecipientName, textShippingAddress, textShippingPhone, textTotalPrice;
         RecyclerView recyclerViewItems;
 
         OrderViewHolder(@NonNull View itemView) {
             super(itemView);
             textOrderDate = itemView.findViewById(R.id.text_order_date);
             textOrderStatus = itemView.findViewById(R.id.text_order_status);
+            textRecipientName = itemView.findViewById(R.id.text_recipient_name);
             textShippingAddress = itemView.findViewById(R.id.text_shipping_address);
             textShippingPhone = itemView.findViewById(R.id.text_shipping_phone);
             textTotalPrice = itemView.findViewById(R.id.text_total_price);

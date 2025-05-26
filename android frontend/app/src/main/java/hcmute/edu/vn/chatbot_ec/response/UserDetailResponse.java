@@ -13,7 +13,7 @@ public class UserDetailResponse {
 
     private String role;
 
-    private boolean isVerified;
+    private boolean verified;
 
     public Integer getId() {
         return id;
@@ -24,11 +24,11 @@ public class UserDetailResponse {
     }
 
     public boolean isVerified() {
-        return isVerified;
+        return verified;
     }
 
     public void setVerified(boolean verified) {
-        isVerified = verified;
+        this.verified = verified;
     }
 
     public String getRole() {

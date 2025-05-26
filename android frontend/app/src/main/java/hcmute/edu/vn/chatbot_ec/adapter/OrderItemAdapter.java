@@ -38,6 +38,8 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.Orde
         holder.textProductName.setText(item.getProductName());
         holder.textQuantity.setText(holder.itemView.getContext().getString(R.string.quantity_format, item.getQuantity().toString()));
         holder.textPrice.setText(holder.itemView.getContext().getString(R.string.price_format, item.getPriceAtPurchase().toString()));
+        holder.textColor.setText(holder.itemView.getContext().getString(R.string.color_format, item.getColor()));
+        holder.textSize.setText(holder.itemView.getContext().getString(R.string.size_format, item.getSize()));
         holder.imageThumbnail.setContentDescription(holder.itemView.getContext().getString(R.string.product_image_description, item.getProductName()));
 
         // Load thumbnail with Glide
@@ -55,7 +57,7 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.Orde
 
     static class OrderItemViewHolder extends RecyclerView.ViewHolder {
         ImageView imageThumbnail;
-        TextView textProductName, textQuantity, textPrice;
+        TextView textProductName, textQuantity, textPrice, textColor, textSize;
 
         OrderItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +65,8 @@ public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.Orde
             textProductName = itemView.findViewById(R.id.text_product_name);
             textQuantity = itemView.findViewById(R.id.text_quantity);
             textPrice = itemView.findViewById(R.id.text_price);
+            textColor = itemView.findViewById(R.id.text_color);
+            textSize = itemView.findViewById(R.id.text_size);
         }
     }
 }
