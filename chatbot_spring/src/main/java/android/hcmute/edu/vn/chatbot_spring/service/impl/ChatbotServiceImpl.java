@@ -4,6 +4,7 @@ import android.hcmute.edu.vn.chatbot_spring.configuration.JwtProvider;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.SummaryRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
 import android.hcmute.edu.vn.chatbot_spring.enums.SENDER;
@@ -78,12 +79,15 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         // Convert request to entity and save user message
         Message userMessage = messageMapper.toEntity(request);
-        userMessage.setChatSession(chatSession); // Ensure proper session assignment
-        userMessage = messageRepository.save(userMessage);        return messageMapper.toResponse(userMessage);
+
+        chatSession.addMessage(userMessage);
+
+        userMessage = messageRepository.save(userMessage);
+        return messageMapper.toResponse(userMessage);
     }
     
     @Override
-    public ChatSessionResponse getChatSessionById(Integer sessionId) {
+    public ChatSessionResponse getChatSessionResponseById(Integer sessionId) {
         ChatSession chatSession = chatSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + sessionId));
         
@@ -112,7 +116,8 @@ public class ChatbotServiceImpl implements ChatbotService {
                 .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + sessionId));
 
         chatSession.setEndedAt(LocalDateTime.now());
-        ChatSession savedSession = chatSessionRepository.save(chatSession);        return chatSessionMapper.toResponse(savedSession);
+        ChatSession savedSession = chatSessionRepository.save(chatSession);
+        return chatSessionMapper.toResponse(savedSession);
     }
 
     @Override
@@ -144,7 +149,8 @@ public class ChatbotServiceImpl implements ChatbotService {
     }
 
     @Override
-    public Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request) {        return chatSessionRepository.findBySessionIdAndUserId(request.getSessionId(), request.getUserId());
+    public Optional<ChatSessionRequest> getChatSession(ChatSessionRequest request) {
+        return chatSessionRepository.findBySessionIdAndUserId(request.getSessionId(), request.getUserId());
     }
     
     @Override
@@ -168,6 +174,18 @@ public class ChatbotServiceImpl implements ChatbotService {
 
         chatSession.setHasSession(true);
         chatSessionRepository.save(chatSession);
+    }
+
+    @Override
+    public ChatSessionResponse updateSummaryChatSession(Integer sessionId, SummaryRequest req) {
+        ChatSession chatSession = this.getChatSessionById(sessionId);
+        chatSession.setSummary(req.getSummary());
+        return chatSessionMapper.toResponse(chatSession);
+    }
+
+    private ChatSession getChatSessionById(int sessionId) {
+        return chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chat session not found with ID: " + sessionId));
     }
 
     /**

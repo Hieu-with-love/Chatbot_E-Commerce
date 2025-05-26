@@ -33,11 +33,28 @@ public class ChatSession {
     @Column(name = "has_session")
     private Boolean hasSession;
 
+    @Lob
+    private String summary;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;    // One session has many messages
 
     @OneToMany(mappedBy = "chatSession", cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
+
+    public void addMessage(Message message) {
+        if (message != null) {
+            messages.add(message);
+            message.setChatSession(this);
+        }
+    }
+
+    public void removeMessage(Message message) {
+        if (message != null) {
+            messages.remove(message);
+            message.setChatSession(null);
+        }
+    }
 
 }
