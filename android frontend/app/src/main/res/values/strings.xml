@@ -59,4 +59,10 @@
     <string name="product_image_description">Hình ảnh của %s</string>
     <string name="order_description">Đơn hàng số %d</string>
     <string name="orders_list_description">Danh sách đơn hàng của bạn</string>
+
+    <!-- Chat Summary strings -->
+    <string name="menu_generate_summary">Generate Chat Summary</string>
+    <string name="summary_generated">Chat summary generated successfully</string>
+    <string name="summary_failed">Failed to generate chat summary</string>
+    <string name="summary_no_messages">No conversation to summarize</string>
 </resources>
