@@ -87,4 +87,11 @@
     <string name="error_update_address_failed">Không cập nhật được địa chỉ</string>
     <string name="error_delete_address_failed">Không xóa được địa chỉ</string>
     <string name="error_network">Lỗi mạng: %1$s</string>
+
+    <!--chatbot strings-->
+    <string name="menu_generate_summary">Generate Chat Summary</string>
+    <string name="summary_generated">Chat summary generated successfully</string>
+    <string name="summary_failed">Failed to generate chat summary</string>
+    <string name="summary_no_messages">No conversation to summarize</string>
+
 </resources>

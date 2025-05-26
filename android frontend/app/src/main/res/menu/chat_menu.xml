@@ -14,11 +14,16 @@
         android:title="Clear Chat"
         android:icon="@android:drawable/ic_menu_delete"
         app:showAsAction="never" />
-    
-    <item
+      <item
         android:id="@+id/action_end_chat"
         android:orderInCategory="300"
         android:title="End Chat Session"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        app:showAsAction="never" />
+          <item
+        android:id="@+id/action_generate_summary"
+        android:orderInCategory="400"
+        android:title="@string/menu_generate_summary"
+        android:icon="@android:drawable/ic_menu_agenda"
         app:showAsAction="never" />
 </menu>

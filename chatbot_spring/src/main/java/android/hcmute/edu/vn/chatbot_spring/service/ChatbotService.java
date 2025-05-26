@@ -3,6 +3,7 @@ package android.hcmute.edu.vn.chatbot_spring.service;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.SummaryRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
 import android.hcmute.edu.vn.chatbot_spring.model.Message;
@@ -15,7 +16,7 @@ public interface ChatbotService {
 
     MessageResponse processMessage(MessageSendRequest request);
 
-    ChatSessionResponse getChatSessionById(Integer sessionId);
+    ChatSessionResponse getChatSessionResponseById(Integer sessionId);
 
     List<ChatSessionResponse> getChatSessionsByUserId(Integer userId);
 
@@ -36,4 +37,6 @@ public interface ChatbotService {
     ChatSessionResponse getChatSessionWithMessages(Integer sessionId, Integer userId);
 
     void updateChatSession(Integer id);
+    ChatSessionResponse updateSummaryChatSession(Integer sessionId, SummaryRequest request);
+
 }
