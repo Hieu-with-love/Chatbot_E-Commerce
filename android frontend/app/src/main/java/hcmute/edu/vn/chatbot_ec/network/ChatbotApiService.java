@@ -10,6 +10,7 @@ import hcmute.edu.vn.chatbot_ec.request.MessageSendRequest;
 import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
 import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
+import hcmute.edu.vn.chatbot_ec.request.SummaryRequest;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import kotlin.ParameterName;
 import retrofit2.Call;
@@ -50,4 +51,9 @@ public interface ChatbotApiService {
     Call<ResponseData<ChatSessionResponse>> getChatSessionWithMessages(
             @Path("sessionId") Integer sessionId,
             @Path("userId") Integer userId);
+            
+    @POST("/api/v1/chatbot/session/{sessionId}/summary")
+    Call<ResponseData<ChatSessionResponse>> updateSummaryChatSession(
+            @Path("sessionId") Integer sessionId,
+            @Body SummaryRequest request);
 }

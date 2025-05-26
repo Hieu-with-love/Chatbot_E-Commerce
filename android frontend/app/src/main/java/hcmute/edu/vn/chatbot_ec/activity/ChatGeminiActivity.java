@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +24,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +44,7 @@ import hcmute.edu.vn.chatbot_ec.request.ChatSessionRequest;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageSendRequest;
+import hcmute.edu.vn.chatbot_ec.request.SummaryRequest;
 import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
 import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
@@ -92,17 +95,15 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
         btnGeneratePrompt.setOnClickListener(v -> {
             String userInput = edtPrompt.getText().toString();
-            if (userInput!=null){
-                // Hiển thị ngay nội dung người dùng lên giao diện
-                addMessageToChat(userInput, Message.SENT_BY_USER);
-                edtPrompt.setText(""); // Xoá ô nhập
+            // Hiển thị ngay nội dung người dùng lên giao diện
+            addMessageToChat(userInput, Message.SENT_BY_USER);
+            edtPrompt.setText(""); // Xoá ô nhập
 
-                // Gửi nội dung người dùng đi (chứa API call bên trong)
-                generateRequest(userInput);
+            // Gửi nội dung người dùng đi (chứa API call bên trong)
+            generateRequest(userInput);
 
-                // Gọi hàm xử lý tiếp nếu cần
-                generateResponse(userInput);
-            }
+            // Gọi hàm xử lý tiếp nếu cần
+            generateResponse(userInput);
         });
         
         if (btnCloseChat != null) {
@@ -120,6 +121,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_toggle_url) {
             toggleUrlMode();
+            return true;
+        } else if (item.getItemId() == R.id.action_generate_summary) {
+            generateAndSaveChatSummary();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -149,9 +153,35 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
 
     private void closeChatRedirectToMain() {
-        Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        // Get the current user information to save the chat summary
+        String token = TokenManager.getToken(this);
+        userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Integer sessionId = response.body().getChatSessionId();
+                    Integer userId = response.body().getUserId();
+                    
+                    // Save the chat summary before closing
+                    saveChatSummary(sessionId, userId);
+                }
+                
+                // Proceed with closing the activity and redirecting
+                Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+            
+            @Override
+            public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+                Log.e("ChatSession", "Failed to get user information for summary", t);
+                
+                // Still redirect even if we couldn't save the summary
+                Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
     }
 
     private void setupRecyclerView() {
@@ -280,9 +310,62 @@ public class ChatGeminiActivity extends AppCompatActivity {
             case "complain":
                 //handleComplaint(originalPrompt);
                 break;
+            case "greeting":
+                handleGreeting(originalPrompt);
+                break;
             default:
-                //handleUnknownIntent(originalPrompt);
+                handleUnknownIntent(originalPrompt);
         }
+    }
+
+    private void handleGreeting(String originalPrompt) {
+        String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.greeting_prompt);
+        assert promptTemplate != null;
+        String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
+
+        GeminiHelper.generateResponse(
+                structuredPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (res, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("GeminiAPI", "Error generating response", error);
+                            showLoading(false);
+                        } else if (res != null) {
+                            Log.d("GeminiAPI", "Response from Gemini: " + res);
+                            addMessageToChat(res, Message.SENT_BY_BOT);
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE;
+                }
+        );
+    }
+
+    private void handleUnknownIntent(String originalPrompt) {
+        // If don't realize prompt. just use gemini model return
+        String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.unknown_prompt);
+        String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
+
+        GeminiHelper.generateResponse(
+                structuredPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (res, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("GeminiAPI", "Error generating response", error);
+                            showLoading(false);
+                        } else if (res != null) {
+                            Log.d("GeminiAPI", "Response from Gemini: " + res);
+                            addMessageToChat(res, Message.SENT_BY_BOT);
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE;
+                }
+        );
     }
 
     private void handleSearchProduct(String originalPrompt) {
@@ -576,7 +659,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 showWelcomeMessage();
             }
         });
-    }    private void createNewChatSession(int userId) {
+    }
+
+    private void createNewChatSession(int userId) {
         ChatSessionStartRequest req = new ChatSessionStartRequest(userId, "New Chat Session");
 
         chatbotApiService.startChatSession(req).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
@@ -600,6 +685,133 @@ public class ChatGeminiActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Extract the last 5 user-bot message pairs from the message list.
+     * @return A list of Pairs where each pair consists of a user message and a bot response
+     */
+    private List<Pair<String, String>> extractLastConversationPairs() {
+        List<Pair<String, String>> pairs = new ArrayList<>();
+        
+        // We need at least 2 messages for a pair (user message + bot response)
+        if (messageList.size() < 2) {
+            return pairs;
+        }
+        
+        String pendingUserMessage = null;
+        
+        // Loop from the end of the list to find the last 5 pairs
+        for (int i = messageList.size() - 1; i >= 0 && pairs.size() < 5; i--) {
+            Message message = messageList.get(i);
+            
+            if (message.getSentBy() == Message.SENT_BY_BOT) {
+                // Found a bot message, wait for its matching user message
+                if (pendingUserMessage != null) {
+                    // Found a complete pair (user followed by bot)
+                    pairs.add(new Pair<>(pendingUserMessage, message.getContent()));
+                    pendingUserMessage = null;
+                }
+            } else if (message.getSentBy() == Message.SENT_BY_USER) {
+                if (pendingUserMessage == null) {
+                    // This is the first user message we've encountered
+                    pendingUserMessage = message.getContent();
+                } else {
+                    // We found another user message before finding a bot response
+                    // This means we had a user message without a response, discard it
+                    // and use this new user message instead
+                    pendingUserMessage = message.getContent();
+                }
+            }
+        }
+        
+        // Reverse the list to get chronological order
+        Collections.reverse(pairs);
+        return pairs;
+    }
+    
+    /**
+     * Format the conversation pairs into a prompt string.
+     * @param pairs The list of user-bot message pairs
+     * @return A formatted prompt string
+     */
+    private String formatConversationToPrompt(List<Pair<String, String>> pairs) {
+        StringBuilder sb = new StringBuilder();
+        
+        for (Pair<String, String> pair : pairs) {
+            sb.append("User: ").append(pair.first).append("\n");
+            sb.append("Bot: ").append(pair.second).append("\n");
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * Creates a summary of the current chat session and sends it to the backend
+     */
+    private void saveChatSummary(Integer sessionId, Integer userId) {
+        List<Pair<String, String>> conversationPairs = extractLastConversationPairs();
+        String conversationPrompt = formatConversationToPrompt(conversationPairs);
+          // Only save if we have at least one exchange
+        if (conversationPairs.isEmpty()) {
+            Log.d("ChatSession", "No conversation pairs to summarize");
+            Toast.makeText(ChatGeminiActivity.this, 
+                getString(R.string.summary_no_messages), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        SummaryRequest summaryRequest = new SummaryRequest(conversationPrompt, userId);
+        
+        chatbotApiService.updateSummaryChatSession(sessionId, summaryRequest)
+            .enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
+                @Override
+                public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, 
+                                      retrofit2.Response<ResponseData<ChatSessionResponse>> response) {                    if (response.isSuccessful() && response.body() != null) {
+                        Log.d("ChatSession", "Chat summary saved successfully for session " + sessionId);
+                        Toast.makeText(ChatGeminiActivity.this, 
+                            getString(R.string.summary_generated), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.e("ChatSession", "Failed to save chat summary: " + 
+                            (response.errorBody() != null ? response.errorBody().toString() : "Unknown error"));
+                        Toast.makeText(ChatGeminiActivity.this, 
+                            getString(R.string.summary_failed), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                  @Override
+                public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
+                    Log.e("ChatSession", "Error saving chat summary", t);
+                    Toast.makeText(ChatGeminiActivity.this, 
+                        getString(R.string.summary_failed) + ": " + t.getMessage(), 
+                        Toast.LENGTH_SHORT).show();
+                }
+            });
+    }
+    /**
+     * Manually trigger the generation and saving of a chat summary.
+     * This can be connected to a menu option or button for testing.
+     */
+    private void generateAndSaveChatSummary() {
+        String token = TokenManager.getToken(this);
+        userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Integer sessionId = response.body().getChatSessionId();
+                    Integer userId = response.body().getUserId();
+                      saveChatSummary(sessionId, userId);
+                } else {
+                    Toast.makeText(ChatGeminiActivity.this, "Could not get user info", Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+                Log.e("ChatSession", "Failed to get user information for summary", t);
+                Toast.makeText(ChatGeminiActivity.this, 
+                    "Failed to generate summary: " + t.getMessage(), 
+                    Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void showWelcomeMessage() {
         if (!welcomeMessageShown) {
             String welcomeMessage = "Hello! I'm your shopping assistant! How can I assist you today?";
@@ -608,7 +820,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
             userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
                 @Override
                 public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
-                    MessageSendRequest req = new MessageSendRequest();                    req.setContent(welcomeMessage);
+                    MessageSendRequest req = new MessageSendRequest();
+                    req.setContent(welcomeMessage);
                     req.setSender(SENDER.BOT.getValue());
                     assert response.body() != null;
                     req.setSessionId(response.body().getChatSessionId());
@@ -629,7 +842,10 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
-
+                    Log.e("ChatSession", "Failed to get user for welcome message", t);
+                    // Still show welcome message locally even if we can't save it
+                    addMessageToChat(welcomeMessage, Message.SENT_BY_BOT);
+                    welcomeMessageShown = true;
                 }
             });
         }

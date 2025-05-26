@@ -1,16 +1,61 @@
 package hcmute.edu.vn.chatbot_ec.utils;
 
+import android.content.Context;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.config.BuildConfig;
+import hcmute.edu.vn.chatbot_ec.model.Message;
 import retrofit2.Callback;
 
 public class ChatGeminiUtils {
     // Manual override flags for testing purposes
     private static boolean manualOverrideEnabled = false;
     private static boolean forceUseEmulatorUrl = false;
+
+    public static List<Pair<String, String>> getLastNCouples(List<Message> messages, int nCouples) {
+        List<Pair<String, String>> result = new ArrayList<>();
+
+        for (int i = messages.size() - 1; i >= 1; i--) {
+            Message m1 = messages.get(i - 1);
+            Message m2 = messages.get(i);
+
+            if (m1.getSentBy() == Message.SENT_BY_USER && m2.getSentBy() == Message.SENT_BY_BOT) {
+                result.add(0, new Pair<>(m1.getContent(), m2.getContent()));
+                if (result.size() >= nCouples) break;
+                i--; // bỏ qua cặp này
+            }
+        }
+
+        return result;
+    }
+
+    public static String readFileFromAssets(Context context, int fileRaw) {
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            InputStream is = context.getResources().openRawResource(fileRaw);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
+            reader.close();
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return stringBuilder.toString();
+    }
     
     public static String getSystemPromptForType(String responseType) {
         switch (responseType) {
