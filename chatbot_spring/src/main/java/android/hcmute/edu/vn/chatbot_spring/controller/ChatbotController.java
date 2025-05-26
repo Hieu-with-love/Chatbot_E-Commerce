@@ -1,10 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.controller;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto;
-import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionRequest;
-import android.hcmute.edu.vn.chatbot_spring.dto.request.ChatSessionStartRequest;
-import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
-import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.*;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ResponseData;
@@ -81,7 +78,7 @@ public class ChatbotController {
     @GetMapping("/session/{sessionId}")
     public ResponseEntity<?> getChatSession(@PathVariable Integer sessionId) {
         try {
-            ChatSessionResponse session = chatbotService.getChatSessionById(sessionId);
+            ChatSessionResponse session = chatbotService.getChatSessionResponseById(sessionId);
             return ResponseEntity.ok(
                     ResponseData.builder()
                             .status(200)
@@ -129,6 +126,28 @@ public class ChatbotController {
     public ResponseEntity<?> endChatSession(@PathVariable Integer sessionId) {
         try {
             ChatSessionResponse session = chatbotService.endChatSession(sessionId);
+            return ResponseEntity.ok(
+                    ResponseData.builder()
+                            .status(200)
+                            .message("Chat session ended successfully")
+                            .data(session)
+                            .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ResponseData.builder()
+                            .status(400)
+                            .message("Failed to end chat session: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    @PostMapping("session/{sessionId}/summary")
+    public ResponseEntity<?> updateSummaryChatSession(@PathVariable Integer sessionId,
+                                                      @RequestBody SummaryRequest request) {
+        try {
+            ChatSessionResponse session = chatbotService.updateSummaryChatSession(sessionId, request);
             return ResponseEntity.ok(
                     ResponseData.builder()
                             .status(200)
