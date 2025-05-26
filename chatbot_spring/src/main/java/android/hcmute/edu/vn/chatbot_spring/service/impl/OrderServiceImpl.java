@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateOrderRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.PurchaseProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.UpdateOrderStatusRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.CartItemResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.CartResponse;
@@ -142,6 +143,59 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.delete(order);
     }
 
+    @Transactional
+    @Override
+    public OrderResponse purchaseProduct(Integer userId, PurchaseProductRequest request) {
+        // Validate user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        // Validate address
+        Address address = addressRepository.findById(request.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy địa chỉ: " + request.getAddressId()));
+        if (!address.getUser().getId().equals(userId)) {
+            throw new ConflictException("Địa chỉ không thuộc về người dùng này");
+        }
+
+        // Validate product and stock
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + request.getProductId()));
+        if (product.getStock() < request.getQuantity()) {
+            throw new ConflictException("Không đủ tồn kho cho sản phẩm: " + product.getName());
+        }
+
+        Order order = Order.builder()
+                .user(user)
+                .orderDate(LocalDateTime.now())
+                .status(OrderStatus.PENDING)
+                .recipientName(address.getRecipientName())
+                .shippingAddress(address.getFullAddress())
+                .shippingPhone(address.getPhone())
+                .totalPrice(BigDecimal.ZERO)
+                .orderItems(new ArrayList<>())
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .order(order)
+                .product(product)
+                .quantity(request.getQuantity())
+                .priceAtPurchase(product.getPrice())
+                .build();
+        order.getOrderItems().add(orderItem);
+
+        // Calculate total price
+        BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        order.setTotalPrice(totalPrice);
+
+        // Update product stock
+        product.setStock(product.getStock() - request.getQuantity());
+        productRepository.save(product);
+
+        // Save order
+        order = orderRepository.save(order);
+
+        return convertToOrderResponse(order);
+    }
 
     // Chuyển đổi Order entity thành OrderResponse
     private OrderResponse convertToOrderResponse(Order order) {

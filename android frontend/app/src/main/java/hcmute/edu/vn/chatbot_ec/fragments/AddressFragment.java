@@ -148,6 +148,11 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
     }
 
     @Override
+    public void onSelect(AddressResponse address) {
+        Toast.makeText(getContext(), "Địa chỉ đã chọn: " + address.getFullAddress(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void onSave(AddressRequest request, Integer addressId) {
         progressLoading.setVisibility(View.VISIBLE);
         if (addressId == null) {
