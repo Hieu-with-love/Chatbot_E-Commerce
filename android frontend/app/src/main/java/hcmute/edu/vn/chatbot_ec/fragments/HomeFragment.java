@@ -24,7 +24,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +50,7 @@ import hcmute.edu.vn.chatbot_ec.response.CartResponse;
 import hcmute.edu.vn.chatbot_ec.response.PageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ProductImageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ProductResponse;
-import hcmute.edu.vn.chatbot_ec.response.UserResponse;
-import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
+import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvProducts;
@@ -63,6 +62,7 @@ public class HomeFragment extends Fragment {
     private List<ProductResponse> products = new ArrayList<>();
     private ProductApiService productApiService;
     private CartApiService cartApiService;
+    private MaterialCardView headerCard;
     private Integer userId;
     private int currentPage = 1;
     private int pageSize = 10;
@@ -79,9 +79,9 @@ public class HomeFragment extends Fragment {
     private boolean isUserAuthenticated = false;
 
     private static String TAG = "HomeFragment";
-    
-    // Broadcast receiver for logout events
-    private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {        @Override
+      // Broadcast receiver for logout events
+    private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {
+        @Override
         public void onReceive(Context context, Intent intent) {
             if (AuthenticationService.ACTION_USER_LOGOUT.equals(intent.getAction())) {
                 Log.d(TAG, "Logout broadcast received");
@@ -139,6 +139,7 @@ public class HomeFragment extends Fragment {
         tvGreeting = view.findViewById(R.id.tv_greeting);
         tvFullName = view.findViewById(R.id.tv_full_name);
         btnLogin = view.findViewById(R.id.btn_login);
+        headerCard = view.findViewById(R.id.header_card);
         
         // Setup login button click listener
         btnLogin.setOnClickListener(v -> {
@@ -166,7 +167,9 @@ public class HomeFragment extends Fragment {
         if (AuthUtils.isTokenExpiringSoon(getContext())) {
             Log.w(TAG, "Token expiring soon - user should refresh session");
         }
-    }    private void loadUserProfile() {
+    }
+
+    private void loadUserProfile() {
         // Get user info directly from SessionManager
         SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
         
@@ -272,11 +275,8 @@ public class HomeFragment extends Fragment {
     
     private void showGuestMode() {
         Log.d(TAG, "Showing guest mode UI");
-        
-        // Hide user avatar and name, show login button
-        imgUserAvatar.setVisibility(View.VISIBLE); // Keep avatar placeholder
-        tvGreeting.setText("Chào khách,");
-        tvFullName.setVisibility(View.GONE);
+
+        headerCard.setVisibility(View.GONE);
         btnLogin.setVisibility(View.VISIBLE);
     }
     private void setupProductList(View view) {
@@ -393,76 +393,40 @@ public class HomeFragment extends Fragment {
                 searchHandler.removeCallbacks(searchRunnable);
                 searchHandler.post(searchRunnable); // Immediate search on submit
                 return true;
-            }
-
-            @Override
+            }            @Override
             public boolean onQueryTextChange(String newText) {
                 currentQuery = newText.trim();
                 searchHandler.removeCallbacks(searchRunnable);
-                searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
-                return true;
-            }
-        });
-        rvProducts.setAdapter(adapter);
-    }
-
-        // Handle search clear
-        searchView.setOnCloseListener(() -> {
-            currentQuery = "";
-            currentPage = 1;
-            isLastPage = false;
-            fetchProducts(currentPage, pageSize, "id", "asc", "");
-            return false;
-        });
-
-        // Fetch user info for greeting and avatar
-        String token = TokenManager.getToken(getContext());
-        if (token != null) {
-            UserApiService userApiService = ApiClient.getUserApiService();
-            userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
-                @Override
-                public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-                    if (isAdded() && getContext() != null) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            userId = response.body().getUserId();
-                            String fullName = response.body().getFullName();
-                            tvFullName.setText(fullName != null ? fullName : getString(R.string.guest));
-
-                            String avatarUrl = response.body().getAvatarUrl();
-                            if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                                Glide.with(HomeFragment.this)
-                                        .load(avatarUrl)
-                                        .placeholder(R.drawable.ic_user_placeholder)
-                                        .error(R.drawable.ic_user_placeholder)
-                                        .circleCrop()
-                                        .into(imgUserAvatar);
-                            } else {
-                                imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-                            }
-                        } else {
-                            tvFullName.setText(R.string.guest);
-                            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-                            Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                
+                // If search is cleared, reset pagination and fetch all products
+                if (currentQuery.isEmpty()) {
+                    currentPage = 1;
+                    isLastPage = false;
+                    searchHandler.post(() -> {
+                        if (isAdded() && getContext() != null) {
+                            fetchProducts(currentPage, pageSize, "id", "asc", "");
                         }
-                        fetchProducts(currentPage, pageSize, "id", "asc", "");
-                    }
+                    });
+                } else {
+                    searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
+                }                return true;
+            }});        // Get userId from JWT token for cart operations
+        SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
+        if (userInfo != null && userInfo.token != null) {
+            String userIdStr = JwtUtils.getUserIdFromToken(userInfo.token);
+            if (userIdStr != null && !userIdStr.trim().isEmpty()) {
+                try {
+                    userId = Integer.parseInt(userIdStr);
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Could not parse userId from token: " + userIdStr, e);
+                    userId = null;
                 }
-
-                @Override
-                public void onFailure(Call<UserResponse> call, Throwable t) {
-                    if (isAdded() && getContext() != null) {
-                        tvFullName.setText(R.string.guest);
-                        imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-                        Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
-                        fetchProducts(currentPage, pageSize, "id", "asc", "");
-                    }
-                }
-            });
-        } else {
-            tvFullName.setText(R.string.guest);
-            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-            fetchProducts(currentPage, pageSize, "id", "asc", "");
+            }
         }
+        
+        // Start loading products
+        fetchProducts(currentPage, pageSize, "id", "asc", "");
+    }
 
     @Override
     public void onResume() {

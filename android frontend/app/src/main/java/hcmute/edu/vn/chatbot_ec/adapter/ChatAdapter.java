@@ -28,7 +28,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat, parent, false);
         return new ChatViewHolder(view);
-    }    @Override
+    }
+
+    @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         Message message = messageList.get(position);
         
@@ -58,7 +60,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     @Override
     public int getItemCount() {
         return messageList.size();
-    }    public void addMessage(Message message) {
+    }
+
+    public void addMessage(Message message) {
         messageList.add(message);
         notifyItemInserted(messageList.size() - 1);
     }
