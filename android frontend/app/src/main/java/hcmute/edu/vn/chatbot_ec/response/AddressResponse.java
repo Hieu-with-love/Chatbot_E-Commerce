@@ -1,10 +1,14 @@
 package hcmute.edu.vn.chatbot_ec.response;
 
-public class AddressResponse {
+import java.io.Serializable;
+
+public class AddressResponse implements Serializable {
     private Integer id;
     private String recipientName;
     private String fullAddress;
     private String phone;
+    private Integer userId;
+
 
     public Integer getId() {
         return id;
@@ -36,6 +40,13 @@ public class AddressResponse {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public AddressResponse() {

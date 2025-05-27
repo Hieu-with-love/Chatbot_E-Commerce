@@ -7,5 +7,6 @@
 
         <!-- IP thực của backend trong mạng LAN -->
         <domain includeSubdomains="true">192.168.1.39</domain>
+        <domain includeSubdomains="true">192.168.1.7</domain>
     </domain-config>
 </network-security-config>

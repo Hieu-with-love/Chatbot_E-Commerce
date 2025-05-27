@@ -120,6 +120,26 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    public PageResponse<ProductResponse> searchProductsByKeyword(int page, int size, String sort, String direction, String keyword) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, sort, direction);
+
+        Page<Product> productPage;
+        if (keyword != null && !keyword.isEmpty()) {
+            productPage = productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            productPage = productRepository.findAll(pageable);
+        }
+
+        return PageResponse.<ProductResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(productPage.getTotalPages())
+                .totalElements(productPage.getTotalElements())
+                .content(productPage.getContent().stream().map(this::convert).toList())
+                .build();
+    }
+
     private ProductResponse convert(Product product) {
         return ProductResponse.builder()
                 .id(product.getId())

@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.dto.response;
 
 
+import android.hcmute.edu.vn.chatbot_spring.enums.OrderStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +15,8 @@ public class OrderResponse {
     private Integer id;
     private Integer userId;
     private LocalDateTime orderDate;
-    private String status;
+    private OrderStatus status;
+    private String recipientName;
     private String shippingAddress;
     private String shippingPhone;
     private BigDecimal totalPrice;

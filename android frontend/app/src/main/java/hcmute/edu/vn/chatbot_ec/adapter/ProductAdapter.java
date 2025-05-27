@@ -5,78 +5,102 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.text.NumberFormat;
+import com.bumptech.glide.Glide;
+import com.google.android.material.button.MaterialButton;
 import java.util.List;
-import java.util.Locale;
-
 import hcmute.edu.vn.chatbot_ec.R;
-import hcmute.edu.vn.chatbot_ec.model.Product;
+import hcmute.edu.vn.chatbot_ec.response.ProductResponse;
 
-public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
-
-    private List<Product> productList;
+public class ProductAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final int TYPE_PRODUCT = 0;
+    private static final int TYPE_LOADING = 1;
+    private List<ProductResponse> products;
     private OnProductClickListener listener;
+    private boolean isLoadingFooter = false;
 
     public interface OnProductClickListener {
-        void onProductClick(Product product);
+        void onProductClick(ProductResponse product);
+        void onAddToCartClick(ProductResponse product);
     }
 
-    public ProductAdapter(List<Product> products, OnProductClickListener listener) {
-        this.productList = products;
+    public ProductAdapter(List<ProductResponse> products, OnProductClickListener listener) {
+        this.products = products;
         this.listener = listener;
     }
 
-    public class ProductViewHolder extends RecyclerView.ViewHolder {
-        TextView productId, productName, productCategory, productPrice;
-        ImageView productImage;
 
-        public ProductViewHolder(@NonNull View itemView) {
-            super(itemView);
-            productId = itemView.findViewById(R.id.product_id);
-            productName = itemView.findViewById(R.id.product_name);
-            productCategory = itemView.findViewById(R.id.product_category);
-            productPrice = itemView.findViewById(R.id.product_price);
-            productImage = itemView.findViewById(R.id.product_image);
 
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onProductClick(productList.get(position));
-                }
-            });
-        }
+    @Override
+    public int getItemViewType(int position) {
+        return (position == products.size() && isLoadingFooter) ? TYPE_LOADING : TYPE_PRODUCT;
     }
 
     @NonNull
     @Override
-    public ProductViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.product_item, parent, false);
-        return new ProductViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_PRODUCT) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.product_item, parent, false);
+            return new ProductViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.loading_footer, parent, false);
+            return new LoadingViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProductViewHolder holder, int position) {
-        Product product = productList.get(position);
-        holder.productId.setText(String.valueOf(product.getId()));
-        holder.productName.setText(product.getName());
-        holder.productCategory.setText(product.getCategoryName());
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof ProductViewHolder) {
+            ProductResponse product = products.get(position);
+            ProductViewHolder productHolder = (ProductViewHolder) holder;
+            productHolder.textName.setText(product.getName());
+            productHolder.textPrice.setText(String.format("%s VNĐ", product.getPrice().toString()));
+            productHolder.textColor.setText(product.getColor() != null ? "Màu: " + product.getColor() : "Màu: Không xác định");
+            productHolder.textSize.setText(product.getSize() != null ? "Kích thước: " + product.getSize() : "Kích thước: Không xác định");
 
-//        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
-//        holder.productPrice.setText(format.format(product.getPrice()));
+            Glide.with(holder.itemView.getContext())
+                    .load(product.getThumbnailUrl())
+                    .placeholder(R.drawable.ic_placeholder)
+                    .error(R.drawable.ic_placeholder)
+                    .into(productHolder.imageThumbnail);
 
-
-        String price = "$" + String.valueOf(product.getPrice());
-        holder.productPrice.setText(price);
-//        holder.productImage.setImageDrawable(product.getProductImages().get(0));
+            productHolder.itemView.setOnClickListener(v -> listener.onProductClick(product));
+            productHolder.buttonAddToCart.setOnClickListener(v -> listener.onAddToCartClick(product));
+        }
+        // No binding needed for LoadingViewHolder
     }
 
     @Override
     public int getItemCount() {
-        return productList.size();
+        return products.size() + (isLoadingFooter ? 1 : 0);
+    }
+
+    public void setLoadingFooter(boolean loading) {
+        isLoadingFooter = loading;
+        notifyItemChanged(products.size());
+    }
+    static class ProductViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageThumbnail;
+        TextView textName, textPrice, textColor, textSize;
+        MaterialButton buttonAddToCart;
+
+        ProductViewHolder(View itemView) {
+            super(itemView);
+            imageThumbnail = itemView.findViewById(R.id.image_thumbnail);
+            textName = itemView.findViewById(R.id.text_product_name);
+            textPrice = itemView.findViewById(R.id.text_price);
+            textColor = itemView.findViewById(R.id.text_color);
+            textSize = itemView.findViewById(R.id.text_size);
+            buttonAddToCart = itemView.findViewById(R.id.button_add_to_cart);
+        }
+    }
+
+    static class LoadingViewHolder extends RecyclerView.ViewHolder {
+        LoadingViewHolder(View itemView) {
+            super(itemView);
+        }
     }
 }

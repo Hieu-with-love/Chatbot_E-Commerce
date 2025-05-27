@@ -4,6 +4,5 @@ import lombok.Getter;
 
 @Getter
 public class CreateOrderRequest {
-    private String shippingAddress;
-    private String shippingPhone;
+    private Integer addressId;
 }
