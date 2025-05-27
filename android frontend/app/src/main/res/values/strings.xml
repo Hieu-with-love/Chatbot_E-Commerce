@@ -88,6 +88,15 @@
     <string name="error_delete_address_failed">Không xóa được địa chỉ</string>
     <string name="error_network">Lỗi mạng: %1$s</string>
 
+    <!--product strings-->
+    <string name="greeting">Chào bạn,</string>
+    <string name="guest">Khách</string>
+    <string name="search_hint">Tìm kiếm sản phẩm...</string>
+    <string name="empty_products">Không tìm thấy sản phẩm</string>
+    <string name="fetch_products_failed">Không thể tải sản phẩm</string>
+    <string name="login_required">Vui lòng đăng nhập</string>
+    <string name="network_error_retry">Không thể tải sản phẩm. Bạn có muốn thử lại không?</string>
+
     <!--chatbot strings-->
     <string name="menu_generate_summary">Generate Chat Summary</string>
     <string name="summary_generated">Chat summary generated successfully</string>

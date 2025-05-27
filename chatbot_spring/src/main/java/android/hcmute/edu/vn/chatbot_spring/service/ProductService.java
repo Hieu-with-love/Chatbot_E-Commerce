@@ -17,4 +17,6 @@ public interface ProductService {
     Product updateProduct(int id, CreateProductRequest req, MultipartFile imageFile);
     PageResponse<ProductResponse> getAllProducts(int page, int size, String sort, String direction);
     void deleteProduct(int id);
+
+    PageResponse<ProductResponse> searchProductsByKeyword(int page, int size, String sort, String direction, String keyword);
 }
