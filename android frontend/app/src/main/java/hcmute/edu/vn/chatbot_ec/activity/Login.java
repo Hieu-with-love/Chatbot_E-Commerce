@@ -38,6 +38,7 @@ import hcmute.edu.vn.chatbot_ec.request.LoginRequest;
 import hcmute.edu.vn.chatbot_ec.response.AuthResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.utils.NetworkUtils;
+import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -47,8 +48,8 @@ public class Login extends AppCompatActivity {
 
     private TextInputEditText emailEditText, passwordEditText;
     private TextInputLayout emailInputLayout, passwordInputLayout;
-    private Button loginButton;
-    private TextView registerTextView;
+    private Button loginButton, backToStartButton;
+    private TextView registerTextView, forgotPasswordTexView;
     private FrameLayout loginSuccessContainer;
     private ImageView loginSuccessCheckmark;
     private TextView welcomeMessageTextView;
@@ -88,6 +89,8 @@ public class Login extends AppCompatActivity {
         
         // Buttons and clickable text
         loginButton = findViewById(R.id.loginButton);
+        backToStartButton = findViewById(R.id.backButton);
+        forgotPasswordTexView = findViewById(R.id.forgotPasswordTextView);
         registerTextView = findViewById(R.id.registerTextView);
         
         // Login success animation views
@@ -100,7 +103,8 @@ public class Login extends AppCompatActivity {
         // Login button click listener
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {                if (validateForm()) {
+            public void onClick(View v) {
+                if (validateForm()) {
                     // Show loading indication
                     loginButton.setEnabled(false);
                     loginButton.setText("Logging in...");
@@ -121,21 +125,21 @@ public class Login extends AppCompatActivity {
                             Log.d("Login", "Attempting login for user: " + emailEditText.getText().toString().trim());
                               // Call login API
                             authApiService.login(loginRequest).enqueue(
-                                new Callback<ResponseData<String>>() {
+                                new Callback<ResponseData<AuthResponse>>() {
                                     @Override
-                                    public void onResponse(Call<ResponseData<String>> call, Response<ResponseData<String>> response) {
+                                    public void onResponse(Call<ResponseData<AuthResponse>> call, Response<ResponseData<AuthResponse>> response) {
                                         // Re-enable login button
                                         loginButton.setEnabled(true);
                                         loginButton.setText("Login");
-                                        
-                                        if (response.isSuccessful() && response.body() != null) {
+                                          if (response.isSuccessful() && response.body() != null) {
                                             if (response.body().getStatus() == HTTP_STATUS.OK.getCode()) {
-                                                String jwt = response.body().getData();
+                                                AuthResponse authResponse = response.body().getData();
+                                                String jwt = authResponse.getToken();
                                                 // Log token receipt (don't log the actual token in production)
                                                 Log.d("Login", "JWT token received successfully.\n" + jwt);
 
-                                                // Save token with TokenManager
-                                                TokenManager.saveToken(getApplicationContext(), jwt);
+                                                // Save complete user session with SessionManager
+                                                SessionManager.saveUserSession(getApplicationContext(), authResponse);
 
                                                 // Reset Retrofit instance to ensure it uses the new token
                                                 ApiClient.resetRetrofitInstance();
@@ -151,7 +155,9 @@ public class Login extends AppCompatActivity {
                                                     Toast.makeText(Login.this, "Login failed! Invalid credentials.", Toast.LENGTH_SHORT).show();
                                                 }
                                             }
-                                        } else {
+                                        }
+
+                                        else {
                                             try {
                                                 // Try to parse error body
                                                 String errorBody = response.errorBody() != null ? 
@@ -166,7 +172,7 @@ public class Login extends AppCompatActivity {
                                     }
 
                                     @Override
-                                    public void onFailure(Call<ResponseData<String>> call, Throwable t) {
+                                    public void onFailure(Call<ResponseData<AuthResponse>> call, Throwable t) {
                                         // Re-enable login button
                                         loginButton.setEnabled(true);
                                         loginButton.setText("Login");
@@ -197,6 +203,11 @@ public class Login extends AppCompatActivity {
             public void onClick(View v) {
                 navigateToRegister();
             }
+        });
+
+        backToStartButton.setOnClickListener(v -> {
+            startActivity(new Intent(Login.this, SplashActivity.class));
+            finish();
         });
     }
 

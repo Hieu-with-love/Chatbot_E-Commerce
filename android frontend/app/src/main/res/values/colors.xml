@@ -70,4 +70,10 @@
     <color name="bot_timestamp_text">#999999</color>
     <color name="bot_avatar_bg">#FF6B35</color>
 
+    <!-- Error and Logout button colors -->
+    <color name="error_background">#FFEBEE</color> <!-- Light red background for error buttons -->
+    <color name="error_background_pressed">#FFCDD2</color> <!-- Darker red when pressed -->
+    <color name="error_text">#D32F2F</color> <!-- Red text for error states -->
+    <color name="error_border">#F44336</color> <!-- Red border for error elements -->
+
 </resources>
