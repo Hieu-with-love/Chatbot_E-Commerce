@@ -13,13 +13,10 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
@@ -36,8 +33,6 @@ import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.activity.Login;
 import hcmute.edu.vn.chatbot_ec.adapter.ProductAdapter;
 
-import hcmute.edu.vn.chatbot_ec.model.Product;
-import hcmute.edu.vn.chatbot_ec.model.ProductImage;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
@@ -47,11 +42,9 @@ import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-    
-import hcmute.edu.vn.chatbot_ec.network.ApiClient;
+
 import hcmute.edu.vn.chatbot_ec.network.CartApiService;
 import hcmute.edu.vn.chatbot_ec.network.ProductApiService;
-import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.request.AddCartItemRequest;
 import hcmute.edu.vn.chatbot_ec.response.CartResponse;
 import hcmute.edu.vn.chatbot_ec.response.PageResponse;
@@ -59,9 +52,6 @@ import hcmute.edu.vn.chatbot_ec.response.ProductImageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ProductResponse;
 import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvProducts;
@@ -85,8 +75,10 @@ public class HomeFragment extends Fragment {
     private Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable loadMoreRunnable;
     private Runnable searchRunnable;
-  private Button btnLogin;
+    private Button btnLogin;
     private boolean isUserAuthenticated = false;
+
+    private static String TAG = "HomeFragment";
     
     // Broadcast receiver for logout events
     private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {        @Override
