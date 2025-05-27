@@ -71,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavView);
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {                Fragment selectedFragment = null;
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Fragment selectedFragment = null;
                 int id = item.getItemId();
                 if (id == R.id.nav_home) {
                     selectedFragment = createHomeFragmentWithAuthState();

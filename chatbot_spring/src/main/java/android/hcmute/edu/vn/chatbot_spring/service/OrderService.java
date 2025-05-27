@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.service;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateOrderRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.PurchaseProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.UpdateOrderStatusRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderResponse;
 import jakarta.transaction.Transactional;
@@ -17,4 +18,6 @@ public interface OrderService {
     OrderResponse updateOrderStatus(Integer orderId, UpdateOrderStatusRequest request);
 
     void cancelOrder(Integer orderId);
+
+    OrderResponse purchaseProduct(Integer userId, PurchaseProductRequest request);
 }

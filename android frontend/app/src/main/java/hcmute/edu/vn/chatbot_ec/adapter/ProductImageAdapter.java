@@ -1,7 +1,5 @@
 package hcmute.edu.vn.chatbot_ec.adapter;
 
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
@@ -10,50 +8,51 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
-import hcmute.edu.vn.chatbot_ec.model.ProductImage;
 
-public class ProductImageAdapter extends RecyclerView.Adapter<ProductImageAdapter.ViewHolder> {
+public class ProductImageAdapter extends RecyclerView.Adapter<ProductImageAdapter.ImageViewHolder> {
+    private final List<String> imageUrls;
 
-    List<String> productImages;
-    private final OnImageClickListener listener;
-
-    public interface OnImageClickListener {
-        void onImageClick(String url);
-    }
-    public ProductImageAdapter(List<String> productImages, OnImageClickListener listener) {
-        this.productImages = productImages;
-        this.listener = listener;
+    public ProductImageAdapter(List<String> imageUrls) {
+        this.imageUrls = imageUrls != null ? imageUrls : new ArrayList<>();
     }
 
     @NonNull
     @Override
-    public ProductImageAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.product_image_item, parent, false);
-        return new ViewHolder(view);
+    public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ImageView imageView = new ImageView(parent.getContext());
+        imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        return new ImageViewHolder(imageView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ProductImageAdapter.ViewHolder holder, int position) {
-        String image = productImages.get(position);
+    public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
+        String url = imageUrls.get(position);
         Glide.with(holder.itemView.getContext())
-                .load(image)
-                .into((ImageView) holder.itemView);
-
-        holder.itemView.setOnClickListener(v -> listener.onImageClick(image));
+                .load(url)
+                .placeholder(R.drawable.ic_placeholder)
+                .error(R.drawable.ic_placeholder)
+                .into(holder.imageView);
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return imageUrls.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            itemView = itemView.findViewById(R.id.img_gallery_thumb);
+    static class ImageViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageView;
+
+        ImageViewHolder(@NonNull ImageView imageView) {
+            super(imageView);
+            this.imageView = imageView;
         }
     }
 }

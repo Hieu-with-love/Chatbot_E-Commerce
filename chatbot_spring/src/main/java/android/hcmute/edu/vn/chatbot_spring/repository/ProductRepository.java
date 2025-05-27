@@ -3,6 +3,7 @@ package android.hcmute.edu.vn.chatbot_spring.repository;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +22,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
                                  @Param("description") String description,
                                  @Param("categoryName") String categoryName,
                                  @Param("price")BigDecimal price);
+
+    Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 }

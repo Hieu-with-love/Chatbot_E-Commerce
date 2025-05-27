@@ -60,4 +60,30 @@
         android:layout_marginTop="4dp"
         android:layout_marginStart="12dp" />
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_color"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/color_format"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/text_price"
+        app:layout_constraintStart_toEndOf="@id/image_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="12dp" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_size"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/size_format"
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintTop_toBottomOf="@id/text_color"
+        app:layout_constraintStart_toEndOf="@id/image_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="12dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,6 +7,8 @@ public class OrderItemResponse {
     private Integer productId;
     private String productName;
     private String thumbnailUrl;
+    private String color;
+    private String size;
     private BigDecimal priceAtPurchase;
     private Integer quantity;
 
@@ -40,6 +42,22 @@ public class OrderItemResponse {
 
     public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public BigDecimal getPriceAtPurchase() {
