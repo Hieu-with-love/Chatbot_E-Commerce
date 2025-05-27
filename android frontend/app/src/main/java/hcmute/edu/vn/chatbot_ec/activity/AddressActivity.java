@@ -1,70 +1,124 @@
-package hcmute.edu.vn.chatbot_ec.fragments;
+package hcmute.edu.vn.chatbot_ec.activity;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textview.MaterialTextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.adapter.AddressAdapter;
+import hcmute.edu.vn.chatbot_ec.fragments.AddEditAddressDialog;
 import hcmute.edu.vn.chatbot_ec.network.AddressApiService;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
+import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.request.AddressRequest;
 import hcmute.edu.vn.chatbot_ec.response.AddressResponse;
+import hcmute.edu.vn.chatbot_ec.response.UserResponse;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AddressFragment extends Fragment implements AddressAdapter.OnAddressActionListener, AddEditAddressDialog.OnAddressSaveListener {
+public class AddressActivity extends AppCompatActivity implements AddressAdapter.OnAddressActionListener, AddEditAddressDialog.OnAddressSaveListener {
 
     private RecyclerView recyclerViewAddresses;
-    private com.google.android.material.textview.MaterialTextView textEmptyAddresses;
+    private MaterialTextView textEmptyAddresses;
     private CircularProgressIndicator progressLoading;
     private AddressAdapter addressAdapter;
     private List<AddressResponse> addresses;
     private AddressApiService addressApiService;
-    private int userId = 1;
+    private UserApiService userApiService;
+    private Integer userId;
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_address, container, false);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_address);
 
-        recyclerViewAddresses = view.findViewById(R.id.recycler_view_addresses);
-        textEmptyAddresses = view.findViewById(R.id.text_empty_addresses);
-        progressLoading = view.findViewById(R.id.progress_loading);
-        FloatingActionButton fabAddAddress = view.findViewById(R.id.fab_add_address);
+        // Initialize views
+        recyclerViewAddresses = findViewById(R.id.recycler_view_addresses);
+        textEmptyAddresses = findViewById(R.id.text_empty_addresses);
+        progressLoading = findViewById(R.id.progress_loading);
+        FloatingActionButton fabAddAddress = findViewById(R.id.fab_add_address);
 
-        addresses = new ArrayList<>();
-        addressAdapter = new AddressAdapter(addresses, this);
-        recyclerViewAddresses.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerViewAddresses.setAdapter(addressAdapter);
+        // Show loading state
+        progressLoading.setVisibility(View.VISIBLE);
+        recyclerViewAddresses.setVisibility(View.GONE);
+        textEmptyAddresses.setVisibility(View.GONE);
 
+        // Initialize API services
         addressApiService = ApiClient.getAddressApiService();
+        userApiService = ApiClient.getUserApiService();
 
+        // Initialize addresses list
+        addresses = new ArrayList<>();
+
+        // Setup RecyclerView (adapter will be set after fetching userId)
+        recyclerViewAddresses.setLayoutManager(new LinearLayoutManager(this));
+
+        // Setup FAB click listener
         fabAddAddress.setOnClickListener(v -> {
+            if (userId == null) {
+                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                return;
+            }
             AddEditAddressDialog dialog = AddEditAddressDialog.newInstance(null, this);
-            dialog.show(getParentFragmentManager(), "AddEditAddressDialog");
+            dialog.show(getSupportFragmentManager(), "AddEditAddressDialog");
         });
 
-        fetchAddresses();
+        // Check token and fetch userId
+        String token = TokenManager.getToken(this);
+        if (token == null) {
+            progressLoading.setVisibility(View.GONE);
+            textEmptyAddresses.setText("Vui lòng đăng nhập để xem địa chỉ");
+            textEmptyAddresses.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        return view;
+        // Fetch userId and initialize adapter in callback
+        userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    userId = response.body().getUserId();
+                    // Initialize AddressAdapter with userId
+                    addressAdapter = new AddressAdapter(addresses, AddressActivity.this);
+                    recyclerViewAddresses.setAdapter(addressAdapter);
+                    // Fetch addresses
+                    fetchAddresses();
+                } else {
+                    progressLoading.setVisibility(View.GONE);
+                    textEmptyAddresses.setText("Không thể lấy thông tin người dùng. Vui lòng thử lại.");
+                    textEmptyAddresses.setVisibility(View.VISIBLE);
+                    Toast.makeText(AddressActivity.this, "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                progressLoading.setVisibility(View.GONE);
+                textEmptyAddresses.setText("Lỗi kết nối. Vui lòng kiểm tra mạng.");
+                textEmptyAddresses.setVisibility(View.VISIBLE);
+                Toast.makeText(AddressActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void fetchAddresses() {
+        if (userId == null) return;
         progressLoading.setVisibility(View.VISIBLE);
         addressApiService.getAddressesByUserId(userId).enqueue(new Callback<List<AddressResponse>>() {
             @Override
@@ -81,6 +135,8 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
                                 .show();
                     }
                 } else {
+                    textEmptyAddresses.setText("Không thể tải danh sách địa chỉ. Vui lòng thử lại.");
+                    updateAddressVisibility();
                     Snackbar.make(recyclerViewAddresses, R.string.error_load_addresses_failed, Snackbar.LENGTH_LONG)
                             .setBackgroundTint(getResources().getColor(R.color.error))
                             .setTextColor(getResources().getColor(R.color.button_text))
@@ -91,6 +147,8 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
             @Override
             public void onFailure(@NonNull Call<List<AddressResponse>> call, @NonNull Throwable t) {
                 progressLoading.setVisibility(View.GONE);
+                textEmptyAddresses.setText("Lỗi kết nối. Vui lòng kiểm tra mạng.");
+                updateAddressVisibility();
                 Snackbar.make(recyclerViewAddresses, getString(R.string.error_network, t.getMessage()), Snackbar.LENGTH_LONG)
                         .setBackgroundTint(getResources().getColor(R.color.error))
                         .setTextColor(getResources().getColor(R.color.button_text))
@@ -111,12 +169,20 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
 
     @Override
     public void onEdit(AddressResponse address) {
+        if (userId == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
         AddEditAddressDialog dialog = AddEditAddressDialog.newInstance(address, this);
-        dialog.show(getParentFragmentManager(), "AddEditAddressDialog");
+        dialog.show(getSupportFragmentManager(), "AddEditAddressDialog");
     }
 
     @Override
     public void onDelete(AddressResponse address) {
+        if (userId == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
         progressLoading.setVisibility(View.VISIBLE);
         addressApiService.deleteAddress(address.getId()).enqueue(new Callback<Void>() {
             @Override
@@ -149,14 +215,18 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
 
     @Override
     public void onSelect(AddressResponse address) {
-        Toast.makeText(getContext(), "Địa chỉ đã chọn: " + address.getFullAddress(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Địa chỉ đã chọn: " + address.getFullAddress(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onSave(AddressRequest request, Integer addressId) {
+        if (userId == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            return;
+        }
         progressLoading.setVisibility(View.VISIBLE);
         if (addressId == null) {
-            // Thêm địa chỉ mới
+            // Add new address
             addressApiService.addAddress(userId, request).enqueue(new Callback<AddressResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<AddressResponse> call, @NonNull Response<AddressResponse> response) {
@@ -185,7 +255,7 @@ public class AddressFragment extends Fragment implements AddressAdapter.OnAddres
                 }
             });
         } else {
-            // Cập nhật địa chỉ
+            // Update existing address
             addressApiService.updateAddress(addressId, request).enqueue(new Callback<AddressResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<AddressResponse> call, @NonNull Response<AddressResponse> response) {

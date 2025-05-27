@@ -1,5 +1,6 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.activity.CheckoutActivity;
 import hcmute.edu.vn.chatbot_ec.adapter.CartAdapter;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.CartApiService;
@@ -135,7 +137,12 @@ public class CartFragment extends Fragment {
                 Toast.makeText(getContext(), "Giỏ hàng trống", Toast.LENGTH_SHORT).show();
                 return;
             }
-            Toast.makeText(getContext(), "Thanh toán đang được xử lý", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(getContext(), CheckoutActivity.class);
+            intent.putExtra("user_id", userId);
+            intent.putParcelableArrayListExtra("cart_items", new ArrayList<>(cartItems));
+            intent.putExtra("is_cart_checkout", true);
+            startActivity(intent);
+            Toast.makeText(getContext(), "Chuyển đến màn hình thanh toán", Toast.LENGTH_SHORT).show();
         });
 
         // Handle clear cart button

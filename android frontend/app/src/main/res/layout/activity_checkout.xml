@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/background_soft">
 
     <androidx.core.widget.NestedScrollView
@@ -23,20 +22,24 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_margin="8dp"
-                android:background="@color/background_soft"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_back"
                 app:tint="@color/text_primary"
                 android:contentDescription="Quay lại" />
 
-            <!-- Product Image with ViewPager2 -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/view_pager_images"
+            <!-- Checkout Title -->
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_height="wrap_content"
+                android:text="Thanh toán"
+                android:textStyle="bold"
+                android:textSize="28sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="16dp" />
 
-            <!-- Product Details -->
+            <!-- Single Product Container (for Buy Now) -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/single_product_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
@@ -51,93 +54,95 @@
                     android:padding="16dp">
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/product_detail_name"
+                        android:id="@+id/checkout_product_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textStyle="bold"
-                        android:textSize="22sp"
+                        android:textSize="18sp"
                         android:textColor="@color/text_primary"
                         android:maxLines="2"
                         android:ellipsize="end"
-                        tools:text="Tên sản phẩm" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/product_detail_category"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="Danh mục" />
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/product_detail_stock"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="Tồn kho: 0" />
-                    </LinearLayout>
-
-                    <!-- Color and Size -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/product_detail_color"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="Màu sắc: Đen" />
-
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/product_detail_size"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="Kích thước: M" />
-                    </LinearLayout>
+                        android:layout_marginBottom="8dp"
+                        android:text="Tên sản phẩm" />
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/product_detail_price"
+                        android:id="@+id/checkout_product_price"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="24sp"
-                        android:textColor="@color/accent"
-                        android:textStyle="bold"
-                        android:layout_marginTop="12dp"
-                        tools:text="0 VNĐ" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/product_detail_description_label"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Mô tả sản phẩm"
-                        android:textStyle="bold"
                         android:textSize="16sp"
-                        android:layout_marginTop="16dp"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="8dp"
+                        android:text="0 VNĐ" />
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:id="@+id/product_detail_description"
+                        android:id="@+id/checkout_quantity"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textColor="@color/text_secondary"
-                        android:layout_marginTop="8dp"
-                        tools:text="Mô tả sản phẩm chi tiết" />
+                        android:layout_marginBottom="8dp"
+                        android:text="Số lượng: 1" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- RecyclerView for Cart Items -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_items"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
+            <!-- Total Price -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/checkout_total_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="@color/accent"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"
+                android:text="Tổng cộng: 0 VNĐ" />
+
+            <!-- Address Selection -->
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Địa chỉ giao hàng"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/address_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/card_background_elevated"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Chọn địa chỉ giao hàng">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/selected_address_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:text="Chọn địa chỉ giao hàng"
+                        android:minLines="2"
+                        android:maxLines="3"
+                        android:ellipsize="end" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -149,37 +154,33 @@
                 app:cardElevation="4dp"
                 app:cardBackgroundColor="@color/card_background_elevated"
                 android:layout_marginBottom="16dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="2"
-                android:padding="8dp"
-                android:background="@android:color/white"
-                android:elevation="8dp">
+                android:padding="10dp">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_add_to_cart"
+                    android:id="@+id/button_add_new_address"
                     android:layout_width="0dp"
                     android:layout_height="54dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:text="Thêm vào giỏ"
+                    android:text="Thêm địa chỉ mới"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
                     app:backgroundTint="@color/button_secondary_background"
-                    app:cornerRadius="12dp"
-                    app:icon="@drawable/ic_shopping_cart"
-                    app:iconPadding="8dp"
-                    app:iconTint="@android:color/white" />
+                    app:cornerRadius="12dp" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_purchase"
+                    android:id="@+id/button_confirm_purchase"
                     android:layout_width="0dp"
                     android:layout_height="54dp"
                     android:layout_weight="1"
-                    android:text="Mua ngay"
+                    android:text="Xác nhận"
                     android:textAllCaps="false"
                     android:textSize="14sp"
                     android:textColor="@android:color/white"
@@ -187,7 +188,7 @@
                     app:cornerRadius="12dp"
                     android:layout_marginStart="8dp" />
             </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+        </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

@@ -1,28 +1,71 @@
 package hcmute.edu.vn.chatbot_ec.response;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.math.BigDecimal;
 
-public class CartItemResponse {
-    private Integer id;
-    private Integer productId;
+public class CartItemResponse implements Parcelable {
+    private int id;
+    private int productId;
     private String name;
-    private String thumbnailUrl;
     private BigDecimal price;
     private int quantity;
+    private String thumbnailUrl;
 
-    public Integer getId() {
+    public CartItemResponse() {
+    }
+
+    protected CartItemResponse(Parcel in) {
+        id = in.readInt();
+        productId = in.readInt();
+        name = in.readString();
+        price = (BigDecimal) in.readSerializable();
+        quantity = in.readInt();
+        thumbnailUrl = in.readString();
+    }
+
+    public static final Creator<CartItemResponse> CREATOR = new Creator<CartItemResponse>() {
+        @Override
+        public CartItemResponse createFromParcel(Parcel in) {
+            return new CartItemResponse(in);
+        }
+
+        @Override
+        public CartItemResponse[] newArray(int size) {
+            return new CartItemResponse[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeInt(productId);
+        dest.writeString(name);
+        dest.writeSerializable(price);
+        dest.writeInt(quantity);
+        dest.writeString(thumbnailUrl);
+    }
+
+    // Getters and setters
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public Integer getProductId() {
+    public int getProductId() {
         return productId;
     }
 
-    public void setProductId(Integer productId) {
+    public void setProductId(int productId) {
         this.productId = productId;
     }
 
@@ -32,14 +75,6 @@ public class CartItemResponse {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
-    }
-
-    public void setThumbnailUrl(String thumbnailUrl) {
-        this.thumbnailUrl = thumbnailUrl;
     }
 
     public BigDecimal getPrice() {
@@ -58,12 +93,11 @@ public class CartItemResponse {
         this.quantity = quantity;
     }
 
-    public CartItemResponse(Integer productId, Integer id, String name, String thumbnailUrl, BigDecimal price, int quantity) {
-        this.productId = productId;
-        this.id = id;
-        this.name = name;
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public void setThumbnailUrl(String thumbnailUrl) {
         this.thumbnailUrl = thumbnailUrl;
-        this.price = price;
-        this.quantity = quantity;
     }
 }

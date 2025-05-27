@@ -1,5 +1,6 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.activity.ProductDetailActivity;
 import hcmute.edu.vn.chatbot_ec.adapter.ProductAdapter;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.CartApiService;
@@ -55,8 +58,8 @@ public class HomeFragment extends Fragment {
     private boolean isLoading = false;
     private boolean isLastPage = false;
     private String currentQuery = "";
-    private static final long DEBOUNCE_DELAY_MS = 300; // Debounce delay for scrolling
-    private static final long SEARCH_DEBOUNCE_DELAY_MS = 500; // Debounce delay for search
+    private static final long DEBOUNCE_DELAY_MS = 300;
+    private static final long SEARCH_DEBOUNCE_DELAY_MS = 500;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable loadMoreRunnable;
@@ -86,32 +89,9 @@ public class HomeFragment extends Fragment {
         adapter = new ProductAdapter(products, new ProductAdapter.OnProductClickListener() {
             @Override
             public void onProductClick(ProductResponse product) {
-                Bundle bundle = new Bundle();
-                bundle.putInt("product_id", product.getId());
-                bundle.putString("product_name", product.getName());
-                bundle.putString("product_description", product.getDescription());
-                bundle.putString("product_price", product.getPrice().toString());
-                bundle.putString("product_thumbnail_url", product.getThumbnailUrl());
-                bundle.putString("product_color", product.getColor());
-                bundle.putString("product_size", product.getSize());
-                bundle.putInt("product_category_id", product.getCategoryId());
-                bundle.putInt("product_stock", product.getStock() != null ? product.getStock() : 0); // Thêm stock
-                bundle.putInt("user_id", userId != null ? userId : -1);
-                ArrayList<String> imageUrls = new ArrayList<>();
-                if (product.getProductImages() != null) {
-                    for (ProductImageResponse image : product.getProductImages()) {
-                        imageUrls.add(image.getImageUrl());
-                    }
-                }
-                bundle.putStringArrayList("product_images", imageUrls);
-
-                ProductDetailFragment detailFragment = new ProductDetailFragment();
-                detailFragment.setArguments(bundle);
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, detailFragment)
-                        .addToBackStack(null)
-                        .commit();
+                Intent intent = new Intent(getContext(), ProductDetailActivity.class);
+                intent.putExtra("product_id", product.getId());
+                startActivity(intent);
             }
 
             @Override
