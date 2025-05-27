@@ -60,17 +60,6 @@
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-                    
-                <Button
-                    android:id="@+id/btn_login"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Đăng nhập"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp"
-                    android:paddingHorizontal="16dp"
-                    android:background="@drawable/bg_button_transparent"
-                    android:visibility="gone" />
             </LinearLayout>
 
             <ImageView
@@ -82,6 +71,21 @@
                 app:tint="@android:color/white" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:text="Đăng nhập"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:paddingHorizontal="16dp"
+        android:background="@drawable/bg_button_transparent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
 
     <!-- SearchView -->
     <androidx.appcompat.widget.SearchView
