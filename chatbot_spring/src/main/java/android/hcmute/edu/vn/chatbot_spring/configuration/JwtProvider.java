@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.configuration;
 
 import android.hcmute.edu.vn.chatbot_spring.util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -33,5 +34,13 @@ public class JwtProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public Claims extractClaimFromToken(String token){
+        return Jwts.parserBuilder()
+                .setSigningKey(jwtUtil.getDecodeKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

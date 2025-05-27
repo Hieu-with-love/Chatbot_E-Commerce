@@ -2,6 +2,7 @@ package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
 import android.hcmute.edu.vn.chatbot_spring.configuration.JwtProvider;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.RegisterRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.AuthResponse;
 import android.hcmute.edu.vn.chatbot_spring.enums.USER_ROLE;
 import android.hcmute.edu.vn.chatbot_spring.model.User;
 import android.hcmute.edu.vn.chatbot_spring.model.VerificationCode;
@@ -10,6 +11,7 @@ import android.hcmute.edu.vn.chatbot_spring.repository.VerificationCodeRepositor
 import android.hcmute.edu.vn.chatbot_spring.service.AuthService;
 import android.hcmute.edu.vn.chatbot_spring.service.EmailService;
 import android.hcmute.edu.vn.chatbot_spring.util.EmailUtil;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -164,4 +166,27 @@ public class AuthServiceImpl implements AuthService {
 
         return false;
     }
+
+    @Override
+    public AuthResponse getCurrentUser(String token) throws IllegalAccessException {
+        String email = jwtProvider.getEmailFromJwtToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalAccessException("User not found"));
+
+        Claims claims = jwtProvider.extractClaimFromToken(token);
+        String role = claims.get("role", String.class);
+        long expiration = claims.getExpiration().getTime();
+        String tokenType = "Bearer";
+
+        return AuthResponse.builder()
+                .token(token)
+                .role(user.getRole())
+                .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
+                .isVerified(user.isVerified())
+                .expiresIn(expiration)
+                .tokenType(tokenType)
+                .build();
+    }
+
 }
