@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_soft"
-    tools:context=".fragments.OrderFragment">
+    tools:context=".activity.OrderActivity">
 
     <!-- Title -->
     <com.google.android.material.textview.MaterialTextView
@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/order_history_title"
-        android:textSize="20sp"
+        android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         app:layout_constraintTop_toTopOf="parent"

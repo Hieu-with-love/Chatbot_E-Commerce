@@ -5,6 +5,7 @@ import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.PageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductImageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductResponse;
+import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
 import android.hcmute.edu.vn.chatbot_spring.model.Category;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 import android.hcmute.edu.vn.chatbot_spring.model.ProductImage;
@@ -118,6 +119,13 @@ public class ProductServiceImpl implements ProductService {
                 .totalElements(productPage.getTotalElements())
                 .content(productPage.getContent().stream().map(this::convert).toList())
                 .build();
+    }
+
+    @Override
+    public ProductResponse getProductById(int id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        return convert(product);
     }
 
     @Override

@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.activity.ProductDetailActivity;
 import hcmute.edu.vn.chatbot_ec.activity.Login;
 import hcmute.edu.vn.chatbot_ec.adapter.ProductAdapter;
 
@@ -39,6 +41,7 @@ import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
 import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
 import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
 import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -69,8 +72,8 @@ public class HomeFragment extends Fragment {
     private boolean isLoading = false;
     private boolean isLastPage = false;
     private String currentQuery = "";
-    private static final long DEBOUNCE_DELAY_MS = 300; // Debounce delay for scrolling
-    private static final long SEARCH_DEBOUNCE_DELAY_MS = 500; // Debounce delay for search
+    private static final long DEBOUNCE_DELAY_MS = 300;
+    private static final long SEARCH_DEBOUNCE_DELAY_MS = 500;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable loadMoreRunnable;
@@ -145,12 +148,14 @@ public class HomeFragment extends Fragment {
             Intent intent = new Intent(getActivity(), Login.class);
             startActivity(intent);
         });
-    }
-
-    private void setupTopBar() {
+    }    private void setupTopBar() {
         if (getContext() == null) {
             return;
         }
+        
+        // Debug authentication state (remove in production)
+        debugSessionInfo();
+        debugJWTTokenInfo();
         
         // Validate token and handle expiration
         if (!AuthUtils.validateAndHandleToken(getContext(), false)) {
@@ -166,8 +171,8 @@ public class HomeFragment extends Fragment {
         if (AuthUtils.isTokenExpiringSoon(getContext())) {
             Log.w(TAG, "Token expiring soon - user should refresh session");
         }
-    }    private void loadUserProfile() {
-        // Get user info directly from SessionManager
+    }private void loadUserProfile() {
+        // Get user info directly from SessionManager first
         SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
         
         if (userInfo != null && userInfo.fullName != null && !userInfo.fullName.trim().isEmpty()) {
@@ -176,8 +181,19 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // If no user info in session, user might not be logged in
-        Log.w(TAG, "No user info found in session, switching to guest mode");
+        // Fallback: Try to get user info from JWT token
+        String token = TokenManager.getToken(getContext());
+        if (token != null && !JwtUtils.isTokenExpired(token)) {
+            String fullNameFromJWT = JwtUtils.getFullNameFromToken(token);
+            if (fullNameFromJWT != null && !fullNameFromJWT.trim().isEmpty()) {
+                Log.d(TAG, "Displaying user info from JWT token");
+                displayUserInfoFromJWT(token);
+                return;
+            }
+        }
+
+        // If no user info in session or JWT, user might not be logged in
+        Log.w(TAG, "No user info found in session or JWT, switching to guest mode");
         showGuestMode();
     }
 
@@ -238,7 +254,7 @@ public class HomeFragment extends Fragment {
         
         // TODO: Load user avatar from URL if available
         // For now, keep the default placeholder
-    }      /**
+    }    /**
      * Display user information from SessionManager
      * @param fullName User's full name from SessionManager
      * @param role User's role from SessionManager (optional)
@@ -267,6 +283,56 @@ public class HomeFragment extends Fragment {
         btnLogin.setVisibility(View.GONE);
         
         // Use default avatar placeholder for session-based display
+        // Can be enhanced later to load avatar from additional API call if needed
+    }
+    
+    /**
+     * Display user information extracted from JWT token
+     * @param token JWT token containing user information
+     */
+    private void displayUserInfoFromJWT(String token) {
+        if (token == null || JwtUtils.isTokenExpired(token)) {
+            Log.w(TAG, "Cannot display user info: token is null or expired");
+            showGuestMode();
+            return;
+        }
+        
+        String fullName = JwtUtils.getFullNameFromToken(token);
+        String role = JwtUtils.getRoleFromToken(token);
+        String userId = JwtUtils.getUserIdFromToken(token);
+        
+        Log.d(TAG, "Displaying user info from JWT for: " + fullName + ", Role: " + role + ", ID: " + userId);
+        
+        // Show user avatar and name, hide login button
+        imgUserAvatar.setVisibility(View.VISIBLE);
+        
+        // Customize greeting based on role
+        String greeting = "Chào bạn,";
+        if (role != null && !role.trim().isEmpty()) {
+            if (role.equalsIgnoreCase("ADMIN")) {
+                greeting = "Chào Admin,";
+            } else if (role.equalsIgnoreCase("MANAGER")) {
+                greeting = "Chào Quản lý,";
+            } else if (role.equalsIgnoreCase("VIP")) {
+                greeting = "Chào thành viên VIP,";
+            }
+        }
+        
+        tvGreeting.setText(greeting);
+        tvFullName.setText(fullName != null ? fullName : "User");
+        tvFullName.setVisibility(View.VISIBLE);
+        btnLogin.setVisibility(View.GONE);
+        
+        // Set userId for cart functionality
+        if (userId != null) {
+            try {
+                this.userId = Integer.parseInt(userId);
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Cannot parse user ID from JWT: " + userId);
+            }
+        }
+        
+        // Use default avatar placeholder for JWT-based display
         // Can be enhanced later to load avatar from additional API call if needed
     }
     
@@ -300,32 +366,9 @@ public class HomeFragment extends Fragment {
         adapter = new ProductAdapter(products, new ProductAdapter.OnProductClickListener() {
             @Override
             public void onProductClick(ProductResponse product) {
-                Bundle bundle = new Bundle();
-                bundle.putInt("product_id", product.getId());
-                bundle.putString("product_name", product.getName());
-                bundle.putString("product_description", product.getDescription());
-                bundle.putString("product_price", product.getPrice().toString());
-                bundle.putString("product_thumbnail_url", product.getThumbnailUrl());
-                bundle.putString("product_color", product.getColor());
-                bundle.putString("product_size", product.getSize());
-                bundle.putInt("product_category_id", product.getCategoryId());
-                bundle.putInt("product_stock", product.getStock() != null ? product.getStock() : 0); // Thêm stock
-                bundle.putInt("user_id", userId != null ? userId : -1);
-                ArrayList<String> imageUrls = new ArrayList<>();
-                if (product.getProductImages() != null) {
-                    for (ProductImageResponse image : product.getProductImages()) {
-                        imageUrls.add(image.getImageUrl());
-                    }
-                }
-                bundle.putStringArrayList("product_images", imageUrls);
-
-                ProductDetailFragment detailFragment = new ProductDetailFragment();
-                detailFragment.setArguments(bundle);
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, detailFragment)
-                        .addToBackStack(null)
-                        .commit();
+                Intent intent = new Intent(getContext(), ProductDetailActivity.class);
+                intent.putExtra("product_id", product.getId());
+                startActivity(intent);
             }
 
             @Override
@@ -401,22 +444,37 @@ public class HomeFragment extends Fragment {
                 searchHandler.removeCallbacks(searchRunnable);
                 searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
                 return true;
-            }
-        });
+            }        });
         rvProducts.setAdapter(adapter);
+        
+        // Fetch user information for cart functionality
+        loadUserInfoForCart();
+        
+        // Load initial products
+        fetchProducts(currentPage, pageSize, "id", "asc", "");
     }
 
-        // Handle search clear
-        searchView.setOnCloseListener(() -> {
-            currentQuery = "";
-            currentPage = 1;
-            isLastPage = false;
-            fetchProducts(currentPage, pageSize, "id", "asc", "");
-            return false;
-        });
-
-        // Fetch user info for greeting and avatar
+    /**
+     * Load user information specifically for cart functionality and user ID
+     * This works alongside the top bar authentication but focuses on getting userId
+     */
+    private void loadUserInfoForCart() {
+        // Try to get user ID from JWT token first
         String token = TokenManager.getToken(getContext());
+        if (token != null && !JwtUtils.isTokenExpired(token)) {
+            String userIdFromToken = JwtUtils.getUserIdFromToken(token);
+            if (userIdFromToken != null) {
+                try {
+                    userId = Integer.parseInt(userIdFromToken);
+                    Log.d(TAG, "User ID loaded from JWT: " + userId);
+                    return;
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Cannot parse user ID from JWT: " + userIdFromToken);
+                }
+            }
+        }
+        
+        // Fallback: Fetch user info from API if JWT doesn't have user ID or is invalid
         if (token != null) {
             UserApiService userApiService = ApiClient.getUserApiService();
             userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
@@ -425,9 +483,9 @@ public class HomeFragment extends Fragment {
                     if (isAdded() && getContext() != null) {
                         if (response.isSuccessful() && response.body() != null) {
                             userId = response.body().getUserId();
-                            String fullName = response.body().getFullName();
-                            tvFullName.setText(fullName != null ? fullName : getString(R.string.guest));
-
+                            Log.d(TAG, "User ID loaded from API: " + userId);
+                            
+                            // Update avatar if not already set by top bar logic
                             String avatarUrl = response.body().getAvatarUrl();
                             if (avatarUrl != null && !avatarUrl.isEmpty()) {
                                 Glide.with(HomeFragment.this)
@@ -436,33 +494,27 @@ public class HomeFragment extends Fragment {
                                         .error(R.drawable.ic_user_placeholder)
                                         .circleCrop()
                                         .into(imgUserAvatar);
-                            } else {
-                                imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
                             }
+                        } else if (response.code() == 401) {
+                            Log.w(TAG, "Token expired while fetching user info");
+                            AuthUtils.handleUnauthorizedResponse(getContext());
                         } else {
-                            tvFullName.setText(R.string.guest);
-                            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-                            Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                            Log.w(TAG, "Failed to load user info from API: " + response.code());
                         }
-                        fetchProducts(currentPage, pageSize, "id", "asc", "");
                     }
                 }
 
                 @Override
                 public void onFailure(Call<UserResponse> call, Throwable t) {
                     if (isAdded() && getContext() != null) {
-                        tvFullName.setText(R.string.guest);
-                        imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-                        Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
-                        fetchProducts(currentPage, pageSize, "id", "asc", "");
+                        Log.e(TAG, "Network error while fetching user info", t);
                     }
                 }
             });
         } else {
-            tvFullName.setText(R.string.guest);
-            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
-            fetchProducts(currentPage, pageSize, "id", "asc", "");
+            Log.d(TAG, "No token available for user info fetching");
         }
+    }
 
     @Override
     public void onResume() {
@@ -501,6 +553,30 @@ public class HomeFragment extends Fragment {
         long timeLeft = SessionManager.getTokenTimeRemaining(getContext());
         Log.d(TAG, "Session Debug: Time left (seconds): " + timeLeft);
     }
+    
+    /**
+     * Debug method to log JWT token information
+     * Useful for development and debugging JWT integration
+     */
+    private void debugJWTTokenInfo() {
+        String token = TokenManager.getToken(getContext());
+        if (token == null) {
+            Log.d(TAG, "JWT Debug: No token found");
+            return;
+        }
+        
+        Log.d(TAG, "JWT Debug: Token exists: true");
+        Log.d(TAG, "JWT Debug: Token expired: " + JwtUtils.isTokenExpired(token));
+        Log.d(TAG, "JWT Debug: Valid format: " + JwtUtils.isValidTokenFormat(token));
+        
+        if (!JwtUtils.isTokenExpired(token)) {
+            Log.d(TAG, "JWT Debug: User ID: " + JwtUtils.getUserIdFromToken(token));
+            Log.d(TAG, "JWT Debug: Email: " + JwtUtils.getEmailFromToken(token));
+            Log.d(TAG, "JWT Debug: Full Name: " + JwtUtils.getFullNameFromToken(token));
+            Log.d(TAG, "JWT Debug: Role: " + JwtUtils.getRoleFromToken(token));
+            Log.d(TAG, "JWT Debug: Expiration: " + JwtUtils.getExpirationFromToken(token));
+        }
+    }
       /**
      * Enhanced logout method with broadcast support
      * Clears the session and switches to guest mode
@@ -520,13 +596,23 @@ public class HomeFragment extends Fragment {
         Log.d(TAG, "Logout broadcast received, switching to guest mode");
         showGuestMode();
     }
-    
-    /**
+      /**
      * Method to check if user is currently authenticated
      * @return true if user has valid token, false otherwise
      */
     public boolean isUserAuthenticated() {
         return AuthUtils.isUserAuthenticated(getContext());
+    }
+    
+    /**
+     * Public method to enable/disable debug logging
+     * Useful for development and testing
+     */
+    public void enableDebugMode(boolean enable) {
+        if (enable) {
+            debugSessionInfo();
+            debugJWTTokenInfo();
+        }
     }
 
     private void fetchProducts(int page, int size, String sort, String direction, String query) {
