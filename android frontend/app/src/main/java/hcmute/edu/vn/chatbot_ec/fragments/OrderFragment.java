@@ -1,6 +1,9 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,12 +27,15 @@ import hcmute.edu.vn.chatbot_ec.network.OrderApiService;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.response.OrderResponse;
 import hcmute.edu.vn.chatbot_ec.response.UserResponse;
+import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
+import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class OrderFragment extends Fragment {
+    private static final String TAG = "OrderFragment";
 
     private RecyclerView recyclerViewOrders;
     private TextView textEmptyOrders;
@@ -38,6 +45,16 @@ public class OrderFragment extends Fragment {
     private UserApiService userApiService;
     private OrderApiService orderApiService;
     private Integer userId;
+    
+    // Broadcast receiver for logout events
+    private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("ACTION_USER_LOGOUT".equals(intent.getAction())) {
+                handleLogoutBroadcast();
+            }
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -63,29 +80,24 @@ public class OrderFragment extends Fragment {
         textEmptyOrders.setVisibility(View.GONE);
 
         // Check token and fetch userId
-        String token = TokenManager.getToken(getContext());
-        if (token == null) {
-            if (isAdded() && getContext() != null) {
-                progressBar.setVisibility(View.GONE);
-                textEmptyOrders.setVisibility(View.VISIBLE);
-                textEmptyOrders.setText(R.string.please_login);
-                Toast.makeText(getContext(), R.string.please_login, Toast.LENGTH_SHORT).show();
-                // Optionally redirect to login screen
-                // Intent loginIntent = new Intent(getActivity(), LoginActivity.class);
-                // startActivity(loginIntent);
-                // getActivity().finish();
-            }
+        if (!AuthUtils.validateAndHandleToken(getContext(), true)) {
+            progressBar.setVisibility(View.GONE);
+            showNotLoggedInState();
             return view;
         }
 
         // Fetch userId
-        userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
+        userApiService.getMe(TokenManager.getToken(getContext())).enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                 if (isAdded() && getContext() != null) {
                     if (response.isSuccessful() && response.body() != null) {
                         userId = response.body().getUserId();
                         fetchOrders(userId);
+                    } else if (response.code() == 401) {
+                        // Handle unauthorized response
+                        AuthUtils.handleUnauthorizedResponse(getContext());
+                        showNotLoggedInState();
                     } else {
                         progressBar.setVisibility(View.GONE);
                         textEmptyOrders.setVisibility(View.VISIBLE);
@@ -121,6 +133,10 @@ public class OrderFragment extends Fragment {
                         orders.addAll(response.body());
                         orderAdapter.submitList(orders);
                         updateOrderVisibility();
+                    } else if (response.code() == 401) {
+                        // Handle unauthorized response
+                        AuthUtils.handleUnauthorizedResponse(getContext());
+                        showNotLoggedInState();
                     } else {
                         textEmptyOrders.setVisibility(View.VISIBLE);
                         textEmptyOrders.setText(R.string.error_load_orders);
@@ -149,6 +165,43 @@ public class OrderFragment extends Fragment {
         } else {
             recyclerViewOrders.setVisibility(View.VISIBLE);
             textEmptyOrders.setVisibility(View.GONE);
+        }
+    }
+    
+    private void showNotLoggedInState() {
+        recyclerViewOrders.setVisibility(View.GONE);
+        textEmptyOrders.setVisibility(View.VISIBLE);
+        textEmptyOrders.setText(R.string.please_login);
+        orders.clear();
+        orderAdapter.submitList(orders);
+    }
+    
+    private void handleLogoutBroadcast() {
+        if (isAdded() && getContext() != null) {
+            progressBar.setVisibility(View.GONE);
+            showNotLoggedInState();
+            Toast.makeText(getContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        }
+    }    @Override
+    public void onStart() {
+        super.onStart();
+        // Register for logout broadcasts
+        if (getContext() != null) {
+            IntentFilter filter = new IntentFilter("ACTION_USER_LOGOUT");
+            ContextCompat.registerReceiver(getContext(), logoutReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
+    }
+    
+    @Override
+    public void onStop() {
+        super.onStop();
+        // Unregister broadcast receiver
+        if (getContext() != null) {
+            try {
+                getContext().unregisterReceiver(logoutReceiver);
+            } catch (IllegalArgumentException e) {
+                // Receiver was not registered
+            }
         }
     }
 }

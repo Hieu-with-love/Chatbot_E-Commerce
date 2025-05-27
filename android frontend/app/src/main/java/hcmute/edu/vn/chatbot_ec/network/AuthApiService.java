@@ -20,7 +20,7 @@ public interface AuthApiService {
      * @return AuthResponse containing JWT token and related information
      */
     @POST("/api/v1/auth/login")
-    Call<ResponseData<String>> login(@Body LoginRequest request);
+    Call<ResponseData<AuthResponse>> login(@Body LoginRequest request);
     
     /**
      * Test endpoint for validating JWT token authentication
