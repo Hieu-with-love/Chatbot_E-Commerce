@@ -36,6 +36,18 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
+            android:name=".activity.CheckoutActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ProductDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.OrderActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AddressActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.ChatGeminiActivity"
             android:exported="false" />
         <activity

@@ -22,6 +22,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.activity.AddressActivity;
+import hcmute.edu.vn.chatbot_ec.activity.OrderActivity;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
@@ -102,22 +104,16 @@ public class UserFragment extends Fragment {
 
         fabAddress.setOnClickListener(v -> {
             if (isAdded() && getContext() != null) {
-                Fragment addressFragment = new AddressFragment();
-                FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, addressFragment);
-                transaction.addToBackStack(null);
-                transaction.commit();
+                Intent intent = new Intent(getContext(), AddressActivity.class);
+                startActivity(intent);
                 Toast.makeText(getContext(), "Chuyển đến màn hình địa chỉ giao hàng", Toast.LENGTH_SHORT).show();
             }
         });
 
         fabOrderHistory.setOnClickListener(v -> {
             if (isAdded() && getContext() != null) {
-                Fragment orderFragment = new OrderFragment();
-                FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, orderFragment);
-                transaction.addToBackStack(null);
-                transaction.commit();
+                Intent intent = new Intent(getContext(), OrderActivity.class);
+                startActivity(intent);
                 Toast.makeText(getContext(), "Chuyển đến màn hình lịch sử mua hàng", Toast.LENGTH_SHORT).show();
             }
         });        // Handle logout button click

@@ -7,6 +7,7 @@ import hcmute.edu.vn.chatbot_ec.response.PageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ProductResponse;
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ProductApiService {
@@ -28,5 +29,8 @@ public interface ProductApiService {
             @Query("direction") String direction,
             @Query("keyword") String keyword
     );
+
+    @GET("/api/v1/products/{id}")
+    Call<ProductResponse> getProductById(@Path("id") Integer id);
 
 }
