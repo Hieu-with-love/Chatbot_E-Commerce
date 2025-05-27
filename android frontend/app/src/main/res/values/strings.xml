@@ -1,7 +1,6 @@
-<resources>
-    <string name="app_name">E-Commerce integrated chatbot</string>
-    <string name="splash_title">Your Shopping Destination</string>
-    <string name="splash_subtitle">for Everything</string>
+<resources>    <string name="app_name">ShopSmart - E-Commerce Assistant</string>
+    <string name="splash_title">ShopSmart</string>
+    <string name="splash_subtitle">Your AI-powered shopping companion for the best deals</string>
     <string name="app_logo">App Logo</string>
     <string name="lets_get_started">Let\'s Get Started</string>
     <string name="already_have_account_question">Already have an account?</string>
@@ -16,9 +15,9 @@
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="log_in">Log in</string>
-
-    <!-- Login strings -->
+    <string name="back">Back To Starter</string>    <!-- Login strings -->
     <string name="dont_have_account_question">Don\'t have an account?</string>
+    <string name="forgot_password">Forgot Password?</string>
     <string name="login_success">Login Successful</string>
     <string name="welcome_back">Welcome Back!</string>
 
@@ -102,5 +101,15 @@
     <string name="summary_generated">Chat summary generated successfully</string>
     <string name="summary_failed">Failed to generate chat summary</string>
     <string name="summary_no_messages">No conversation to summarize</string>
+
+    
+    <!-- Authentication and Logout strings -->
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="logout_success">Đã đăng xuất thành công</string>
+    <string name="token_expired">Phiên đăng nhập đã hết hạn</string>
+    <string name="session_expired">Phiên làm việc đã hết hạn, vui lòng đăng nhập lại</string>
+    <string name="authentication_required">Vui lòng đăng nhập để tiếp tục</string>
+    <string name="token_refresh_failed">Không thể làm mới phiên đăng nhập</string>
 
 </resources>

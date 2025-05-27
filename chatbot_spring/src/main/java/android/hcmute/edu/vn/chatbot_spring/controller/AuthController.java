@@ -3,21 +3,21 @@ package android.hcmute.edu.vn.chatbot_spring.controller;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.LoginRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.RegisterRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ResetPasswordRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.AuthResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ResponseData;
 import android.hcmute.edu.vn.chatbot_spring.model.User;
 import android.hcmute.edu.vn.chatbot_spring.service.AuthService;
+import android.hcmute.edu.vn.chatbot_spring.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
@@ -39,8 +39,10 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req){
         try{
             String jwt = authService.login(req.getEmail(), req.getPassword());
+            AuthResponse authResponse = authService.getCurrentUser(jwt);
+
             ResponseData responseData = ResponseData.builder()
-                    .data(jwt)
+                    .data(authResponse)
                     .status(200)
                     .message("Login successfully")
                     .build();
@@ -74,5 +76,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body(responseData +"\n" + ex.getMessage());
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMeByToken(String token) {
+        try {
+            return ResponseEntity.ok(userService.getChatSessionByEmail(token));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+
 
 }

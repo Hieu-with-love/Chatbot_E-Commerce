@@ -96,14 +96,13 @@
                     android:inputType="textPassword" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Login Button -->
+    </androidx.cardview.widget.CardView>    <!-- Login Button -->
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/loginButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginTop="24dp"
         android:background="@drawable/rounded_button"
         android:paddingVertical="12dp"
@@ -111,8 +110,26 @@
         android:textAllCaps="false"
         android:textColor="@color/button_text"
         android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/backButton"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loginFormCard" />
+
+    <!-- Back Button -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/backButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/rounded_button"
+        android:paddingVertical="12dp"
+        android:text="@string/back"
+        android:textAllCaps="false"
+        android:textColor="@color/button_text"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/loginButton"
         app:layout_constraintTop_toBottomOf="@+id/loginFormCard" />
 
     <!-- Login Success Animation Container -->
@@ -143,14 +160,12 @@
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
-    </FrameLayout>
-
-    <!-- Register Link Text -->
+    </FrameLayout>    <!-- Register Link Text -->
     <LinearLayout
         android:id="@+id/layout_register_link"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="60dp"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -172,5 +187,25 @@
             android:textColor="@color/text_accent"
             android:textSize="16sp" />
     </LinearLayout>
+
+    <!-- Forgot Password Link -->
+    <TextView
+        android:id="@+id/forgotPasswordTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="32dp"
+        android:text="@string/forgot_password"
+        android:textColor="@color/text_accent"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layout_register_link"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

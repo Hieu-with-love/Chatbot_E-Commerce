@@ -3,25 +3,32 @@ package hcmute.edu.vn.chatbot_ec.response;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Model class for authentication response that contains JWT token
+ * Model class for authentication response that contains JWT token and user information
  */
 public class AuthResponse {
     @SerializedName("token")
     private String token;
 
-    
     @SerializedName("tokenType")
     private String tokenType;
     
     @SerializedName("expiresIn")
     private long expiresIn;
     
-    // Optional user data that might be included in the response
-    @SerializedName("userId")
-    private String userId;
-    
     @SerializedName("email")
     private String email;
+    
+    @SerializedName("fullName")
+    private String fullName;
+    
+    @SerializedName("avatarUrl")
+    private String avatarUrl;
+    
+    @SerializedName("isVerified")
+    private boolean isVerified;
+    
+    @SerializedName("role")
+    private String role;
 
     public String getToken() {
         return token;
@@ -47,20 +54,42 @@ public class AuthResponse {
         this.expiresIn = expiresIn;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
     public String getEmail() {
         return email;
+    }    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
     
     /**

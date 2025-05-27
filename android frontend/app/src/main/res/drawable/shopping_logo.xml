@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Background circle with gradient effect -->
+    <path
+        android:fillColor="@color/accent_light"
+        android:pathData="M100,10C50.29,10 10,50.29 10,100C10,149.71 50.29,190 100,190C149.71,190 190,149.71 190,100C190,50.29 149.71,10 100,10Z" />
+    
+    <!-- Inner circle for depth -->
+    <path
+        android:fillColor="@color/accent"
+        android:pathData="M100,20C55.82,20 20,55.82 20,100C20,144.18 55.82,180 100,180C144.18,180 180,144.18 180,100C180,55.82 144.18,20 100,20Z" />
+
+    <!-- Shopping bag main body -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M65,70L135,70C140.52,70 145,74.48 145,80L145,140C145,150.49 136.49,159 126,159L74,159C63.51,159 55,150.49 55,140L55,80C55,74.48 59.48,70 65,70Z" />
+    
+    <!-- Shopping bag handles -->
+    <path
+        android:fillColor="@android:color/white"
+        android:strokeColor="@color/accent"
+        android:strokeWidth="4"
+        android:pathData="M75,70C75,58.95 83.95,50 95,50L105,50C116.05,50 125,58.95 125,70"
+        android:fillType="nonZero" />
+    
+    <!-- Shopping bag fold/top -->
+    <path
+        android:fillColor="@color/accent_dark"
+        android:pathData="M65,70L135,70C140.52,70 145,74.48 145,80L145,85L55,85L55,80C55,74.48 59.48,70 65,70Z" />
+    
+    <!-- Shopping items inside bag (small rectangles representing products) -->
+    <path
+        android:fillColor="@color/fashion_accent_1"
+        android:pathData="M70,95L90,95L90,110L70,110Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_2"
+        android:pathData="M95,95L115,95L115,105L95,105Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_3"
+        android:pathData="M120,95L130,95L130,115L120,115Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_4"
+        android:pathData="M70,120L85,120L85,130L70,130Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_5"
+        android:pathData="M90,115L110,115L110,125L90,125Z" />
+
+    <!-- Small sparkle effects around the bag -->
+    <path
+        android:fillColor="@color/fashion_accent_1"
+        android:pathData="M45,45L47,47L45,49L43,47Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_1"
+        android:pathData="M155,45L157,47L155,49L153,47Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_1"
+        android:pathData="M45,155L47,157L45,159L43,157Z" />
+    
+    <path
+        android:fillColor="@color/fashion_accent_1"
+        android:pathData="M155,155L157,157L155,159L153,157Z" />
+
+    <!-- E-commerce symbol (small cart icon in corner) -->
+    <path
+        android:fillColor="@color/accent_dark"
+        android:pathData="M150,25L160,25L158,35L162,35L162,40L148,40L150,25ZM150,42C151.1,42 152,42.9 152,44C152,45.1 151.1,46 150,46C148.9,46 148,45.1 148,44C148,42.9 148.9,42 150,42ZM158,42C159.1,42 160,42.9 160,44C160,45.1 159.1,46 158,46C156.9,46 156,45.1 156,44C156,42.9 156.9,42 158,42Z" />
+
+</vector>

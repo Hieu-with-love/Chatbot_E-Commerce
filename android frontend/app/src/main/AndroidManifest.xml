@@ -59,9 +59,18 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
+        </activity>        <activity
             android:name=".activity.ProductListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.JwtTestActivity"
+            android:exported="false"
+            android:label="JWT Test Activity" />
+            
+        <!-- Authentication Service for background token monitoring -->
+        <service
+            android:name=".service.AuthenticationService"
+            android:enabled="true"
             android:exported="false" />
     </application>
 
