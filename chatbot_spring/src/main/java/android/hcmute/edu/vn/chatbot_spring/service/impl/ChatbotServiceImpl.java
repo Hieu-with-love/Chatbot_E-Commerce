@@ -180,6 +180,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     public ChatSessionResponse updateSummaryChatSession(Integer sessionId, SummaryRequest req) {
         ChatSession chatSession = this.getChatSessionById(sessionId);
         chatSession.setSummary(req.getSummary());
+        chatSessionRepository.save(chatSession);
         return chatSessionMapper.toResponse(chatSession);
     }
 
