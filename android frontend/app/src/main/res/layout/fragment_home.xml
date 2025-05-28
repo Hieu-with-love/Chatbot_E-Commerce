@@ -89,6 +89,21 @@
         app:layout_constraintBottom_toBottomOf="@id/search_view"
         android:layout_marginTop="12dp" />
 
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="wrap_content"
+        android:layout_height="32dp"
+        android:text="Đăng nhập"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:paddingHorizontal="16dp"
+        android:background="@drawable/bg_button_transparent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
+
     <!-- SearchView -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_view"

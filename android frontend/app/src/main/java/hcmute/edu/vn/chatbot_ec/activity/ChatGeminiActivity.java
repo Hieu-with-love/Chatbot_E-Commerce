@@ -70,11 +70,12 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private ImageButton btnGeneratePrompt;
     private ImageView btnCloseChat;
     private ProgressBar progressBar;
-    private ChatAdapter chatAdapter;    private List<Message> messageList;
+    private ChatAdapter chatAdapter;
+    private List<Message> messageList;
     private boolean welcomeMessageShown = false;
     private ChatbotApiService chatbotApiService = ApiClient.getChatbotApiService();
     private UserApiService userApiService = ApiClient.getUserApiService();
-      // For tracking recent conversation pairs for summary generation
+
     private List<Pair<String, String>> recentPairs = new ArrayList<>();
     private String currentUserMessage = null;
     
@@ -137,10 +138,11 @@ public class ChatGeminiActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_toggle_url) {
             toggleUrlMode();
             return true;
-        } else if (item.getItemId() == R.id.action_generate_summary) {
-            generateAndSaveChatSummary();
-            return true;
         }
+//        else if (item.getItemId() == R.id.action_generate_summary) {
+//            generateAndSaveChatSummary();
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -331,7 +333,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
             default:
                 handleUnknownIntent(originalPrompt);
         }
-    }    private void handleGreeting(String originalPrompt) {
+    }    
+  
+  private void handleGreeting(String originalPrompt) {
         String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.greeting_prompt);
         assert promptTemplate != null;
         String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
@@ -378,7 +382,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     return kotlin.Unit.INSTANCE;
                 }
         );
-    }    private void handleUnknownIntent(String originalPrompt) {
+    }
+
+    private void handleUnknownIntent(String originalPrompt) {
         // If don't realize prompt. just use gemini model return
         String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.unknown_prompt);
         String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
@@ -540,7 +546,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
             Log.d("SpringBackend", "Response from backend (" + intentType + "): " + finalResponse);
             generateFinalResponse(originalPrompt, finalResponse, intentType);
         });
-    }    // Cập nhật method generateFinalResponse để handle các intent khác nhau
+    }    
+  
+  // Cập nhật method generateFinalResponse để handle các intent khác nhau
     private void generateFinalResponse(String originalPrompt, String backendData, String intentType) {
         String systemContext = ChatGeminiUtils.getSystemContextForIntent(intentType);
         String finalPrompt = systemContext +
@@ -634,6 +642,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.e("SpringBackend", "Empty response from server");
         addMessageToChat("Xin lỗi, tôi không nhận được phản hồi từ server. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
     }
+
     
     /**
      * Resets the processing state to allow new messages to be processed
@@ -641,7 +650,10 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void resetProcessingState() {
         isProcessingResponse = false;
         showLoading(false);
-    }private void addMessageToChat(String content, int sentBy) {
+    }
+  
+  private void addMessageToChat(String content, int sentBy) {
+
         Message message = new Message(content, sentBy);
         chatAdapter.addMessage(message);
         
@@ -857,6 +869,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
      * Creates a summary of the current chat session and sends it to the backend
      * This method is kept for backward compatibility but now uses a simple message
      */
+
     private void saveChatSummary(Integer sessionId, Integer userId) {
         // Create a simple summary message since we now handle summaries automatically
         String simpleSummary = "Chat session completed with " + messageList.size() + " messages exchanged.";
