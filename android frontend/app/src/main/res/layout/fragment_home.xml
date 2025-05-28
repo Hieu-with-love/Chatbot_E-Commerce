@@ -60,17 +60,6 @@
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-                    
-                <Button
-                    android:id="@+id/btn_login"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:text="Đăng nhập"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp"
-                    android:paddingHorizontal="16dp"
-                    android:background="@drawable/bg_button_transparent"
-                    android:visibility="gone" />
             </LinearLayout>
 
             <ImageView
@@ -80,8 +69,25 @@
                 android:src="@drawable/ic_shopping_cart"
                 android:contentDescription="Cart"
                 app:tint="@android:color/white" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>    
+        
+        </com.google.android.material.card.MaterialCardView>    
+
+    <!-- Login Button -->
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:text="Đăng nhập"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/card_background_elevated"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/header_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/search_view"
+        android:layout_marginTop="12dp" />
 
     <!-- SearchView -->
     <androidx.appcompat.widget.SearchView
@@ -93,24 +99,30 @@
         android:background="@drawable/bg_search_view"
         app:layout_constraintTop_toBottomOf="@id/header_card"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_login"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="12dp"
+        android:layout_marginEnd="8dp" />
+
+    
 
     <!-- RecyclerView for products -->
+
+    <!-- Empty state TextView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_products"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/search_view"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:clipToPadding="false"
         android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_view"
+        app:layout_constraintVertical_bias="1.0"
         tools:listitem="@layout/product_item" />
 
-    <!-- Empty state TextView -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tv_empty_state"
         android:layout_width="0dp"

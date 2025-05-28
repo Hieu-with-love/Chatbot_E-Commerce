@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.content.ContextCompat;
 import android.os.Handler;
 import android.os.Looper;
@@ -80,6 +82,7 @@ public class HomeFragment extends Fragment {
     private Runnable searchRunnable;
     private Button btnLogin;
     private boolean isUserAuthenticated = false;
+    private ConstraintLayout constraintLayout;
 
     private static String TAG = "HomeFragment";
     
@@ -134,21 +137,22 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Receiver was not registered");
             }
         }
-    }
-    
-    private void initViews(View view) {
+    }      private void initViews(View view) {
         rvProducts = view.findViewById(R.id.rv_products);
         imgUserAvatar = view.findViewById(R.id.img_user_avatar);
+        imgCart = view.findViewById(R.id.img_cart);
         tvGreeting = view.findViewById(R.id.tv_greeting);
         tvFullName = view.findViewById(R.id.tv_full_name);
         btnLogin = view.findViewById(R.id.btn_login);
+        searchView = view.findViewById(R.id.search_view);
+        constraintLayout = (ConstraintLayout) view;
         
         // Setup login button click listener
         btnLogin.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), Login.class);
             startActivity(intent);
         });
-    }    private void setupTopBar() {
+    }private void setupTopBar() {
         if (getContext() == null) {
             return;
         }
@@ -239,10 +243,7 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
-    }
-
-
-    private void displayUserInfo(UserDetailResponse user) {
+    }    private void displayUserInfo(UserDetailResponse user) {
         Log.d(TAG, "Displaying user info for: " + user.getFullName());
         
         // Show user avatar and name, hide login button
@@ -252,14 +253,21 @@ public class HomeFragment extends Fragment {
         tvFullName.setVisibility(View.VISIBLE);
         btnLogin.setVisibility(View.GONE);
         
+        // Show cart icon when user is authenticated
+        if (imgCart != null) {
+            imgCart.setVisibility(View.VISIBLE);
+        }
+        
+        // Update SearchView constraints when login button is hidden
+        updateSearchViewConstraints(false);
+        
         // TODO: Load user avatar from URL if available
         // For now, keep the default placeholder
-    }    /**
+    }/**
      * Display user information from SessionManager
      * @param fullName User's full name from SessionManager
      * @param role User's role from SessionManager (optional)
-     */
-    private void displayUserInfoFromSession(String fullName, String role) {
+     */    private void displayUserInfoFromSession(String fullName, String role) {
         Log.d(TAG, "Displaying user info from SessionManager for: " + fullName + ", Role: " + role);
         
         // Show user avatar and name, hide login button
@@ -276,11 +284,18 @@ public class HomeFragment extends Fragment {
                 greeting = "Chào thành viên VIP,";
             }
         }
-        
-        tvGreeting.setText(greeting);
+          tvGreeting.setText(greeting);
         tvFullName.setText(fullName);
         tvFullName.setVisibility(View.VISIBLE);
         btnLogin.setVisibility(View.GONE);
+        
+        // Show cart icon when user is authenticated
+        if (imgCart != null) {
+            imgCart.setVisibility(View.VISIBLE);
+        }
+        
+        // Update SearchView constraints when login button is hidden
+        updateSearchViewConstraints(false);
         
         // Use default avatar placeholder for session-based display
         // Can be enhanced later to load avatar from additional API call if needed
@@ -316,12 +331,18 @@ public class HomeFragment extends Fragment {
             } else if (role.equalsIgnoreCase("VIP")) {
                 greeting = "Chào thành viên VIP,";
             }
-        }
-        
-        tvGreeting.setText(greeting);
+        }          tvGreeting.setText(greeting);
         tvFullName.setText(fullName != null ? fullName : "User");
         tvFullName.setVisibility(View.VISIBLE);
         btnLogin.setVisibility(View.GONE);
+        
+        // Show cart icon when user is authenticated
+        if (imgCart != null) {
+            imgCart.setVisibility(View.VISIBLE);
+        }
+        
+        // Update SearchView constraints when login button is hidden
+        updateSearchViewConstraints(false);
         
         // Set userId for cart functionality
         if (userId != null) {
@@ -335,8 +356,7 @@ public class HomeFragment extends Fragment {
         // Use default avatar placeholder for JWT-based display
         // Can be enhanced later to load avatar from additional API call if needed
     }
-    
-    private void showGuestMode() {
+      private void showGuestMode() {
         Log.d(TAG, "Showing guest mode UI");
         
         // Hide user avatar and name, show login button
@@ -344,18 +364,50 @@ public class HomeFragment extends Fragment {
         tvGreeting.setText("Chào khách,");
         tvFullName.setVisibility(View.GONE);
         btnLogin.setVisibility(View.VISIBLE);
+        
+        // Hide cart icon when user is not authenticated
+        if (imgCart != null) {
+            imgCart.setVisibility(View.GONE);
+        }
+          // Clear user ID since user is not authenticated
+        userId = null;
+        
+        // Update SearchView constraints to reference login button
+        updateSearchViewConstraints(true);
     }
-    private void setupProductList(View view) {
-
-
-        // Initialize UI components
+    
+    /**
+     * Update SearchView constraints based on login button visibility
+     * @param loginVisible true if login button is visible, false otherwise
+     */
+    private void updateSearchViewConstraints(boolean loginVisible) {
+        if (constraintLayout == null || searchView == null) {
+            return;
+        }
+        
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(constraintLayout);
+        
+        if (loginVisible) {
+            // When login button is visible, SearchView should constrain to its start
+            constraintSet.connect(R.id.search_view, ConstraintSet.TOP, 
+                                R.id.btn_login, ConstraintSet.TOP, 0);
+            constraintSet.connect(R.id.search_view, ConstraintSet.BOTTOM, 
+                                R.id.btn_login, ConstraintSet.BOTTOM, 0);
+        } else {
+            // When login button is hidden, SearchView should constrain below header_card
+            constraintSet.connect(R.id.search_view, ConstraintSet.TOP, 
+                                R.id.header_card, ConstraintSet.BOTTOM, 
+                                getResources().getDimensionPixelSize(R.dimen.margin_medium));
+            constraintSet.clear(R.id.search_view, ConstraintSet.BOTTOM);
+        }
+        
+        constraintSet.applyTo(constraintLayout);
+    }
+    private void setupProductList(View view) {        // Initialize UI components
         rvProducts = view.findViewById(R.id.rv_products);
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmptyState = view.findViewById(R.id.tv_empty_state);
-        tvGreeting = view.findViewById(R.id.tv_greeting);
-        tvFullName = view.findViewById(R.id.tv_full_name);
-        imgCart = view.findViewById(R.id.img_cart);
-        imgUserAvatar = view.findViewById(R.id.img_user_avatar);
         searchView = view.findViewById(R.id.search_view);
         productApiService = ApiClient.getProductApiService();
         cartApiService = ApiClient.getCartApiService();
