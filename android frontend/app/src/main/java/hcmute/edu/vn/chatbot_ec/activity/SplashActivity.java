@@ -19,7 +19,7 @@ import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import hcmute.edu.vn.chatbot_ec.utils.ActivityUtils;
 import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -69,12 +69,11 @@ public class SplashActivity extends AppCompatActivity {
                 ActivityUtils.navigateToActivity(SplashActivity.this, Login.class);
             }
         });
-    }
-      /**
-     * Check if user has a valid session and validate it
+    }    /**
+     * Check if user has a valid token and validate it
      */
     private void checkAuthenticationStatus() {
-        String token = SessionManager.getToken(this);
+        String token = TokenManager.getToken(this);
         
         if (token == null) {
             Log.d(TAG, "No token found, user needs to login");
@@ -83,15 +82,7 @@ public class SplashActivity extends AppCompatActivity {
             return;
         }
         
-        // Check if session is expired
-        if (SessionManager.isTokenExpired(this)) {
-            Log.w(TAG, "Session is expired, clearing session");
-            SessionManager.clearSession(this);
-            showSplashUI();
-            return;
-        }
-        
-        // Session exists and is not expired, validate with server
+        // Token exists, validate with server
         validateTokenWithServer(token);
     }
     
@@ -132,10 +123,9 @@ public class SplashActivity extends AppCompatActivity {
     }
       /**
      * Handle invalid session by clearing it and showing splash UI
-     */
-    private void handleInvalidToken() {
+     */    private void handleInvalidToken() {
         Log.d(TAG, "Handling invalid session");
-        SessionManager.clearSession(this);
+        TokenManager.clearToken(this);
         ApiClient.resetRetrofitInstance();
         showSplashUI();
     }

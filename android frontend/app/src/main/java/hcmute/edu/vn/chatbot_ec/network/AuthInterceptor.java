@@ -5,14 +5,14 @@ import android.util.Log;
 
 import java.io.IOException;
 
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
 /**
  * Interceptor for adding Authorization headers to outgoing requests
- * Automatically adds JWT token from SessionManager to all API requests
+ * Automatically adds JWT token from TokenManager to all API requests
  */
 public class AuthInterceptor implements Interceptor {
     private static final String TAG = "AuthInterceptor";
@@ -27,13 +27,12 @@ public class AuthInterceptor implements Interceptor {
         Request original = chain.request();
         Request.Builder builder = original.newBuilder();
         
-        // Get token from SessionManager
-        String token = SessionManager.getToken(context);
-        String tokenType = SessionManager.getTokenType(context);
+        // Get token from TokenManager
+        String token = TokenManager.getToken(context);
 
         if (token != null) {
             Log.d(TAG, "Adding Authorization header to request: " + original.url());
-            builder.header("Authorization", tokenType + " " + token);
+            builder.header("Authorization", "Bearer " + token);
         } else {
             Log.d(TAG, "No JWT token available for request: " + original.url());
         }

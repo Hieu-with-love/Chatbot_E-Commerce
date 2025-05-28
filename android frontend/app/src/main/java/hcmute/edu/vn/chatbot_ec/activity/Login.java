@@ -38,7 +38,6 @@ import hcmute.edu.vn.chatbot_ec.request.LoginRequest;
 import hcmute.edu.vn.chatbot_ec.response.AuthResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import hcmute.edu.vn.chatbot_ec.utils.NetworkUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -139,8 +138,7 @@ public class Login extends AppCompatActivity {
                                                 Log.d("Login", "JWT token received successfully.\n" + jwt);
 
                                                 // Save complete user session with SessionManager
-                                                SessionManager.saveUserSession(getApplicationContext(), authResponse);
-
+                                                TokenManager.saveToken(getApplicationContext(), jwt);
                                                 // Reset Retrofit instance to ensure it uses the new token
                                                 ApiClient.resetRetrofitInstance();
 

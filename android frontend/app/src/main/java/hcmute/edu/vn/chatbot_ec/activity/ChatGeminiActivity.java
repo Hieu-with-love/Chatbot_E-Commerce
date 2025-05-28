@@ -40,9 +40,7 @@ import hcmute.edu.vn.chatbot_ec.model.Message;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.ChatbotApiService;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
-import hcmute.edu.vn.chatbot_ec.request.ChatSessionRequest;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
-import hcmute.edu.vn.chatbot_ec.request.MessageRequest;
 import hcmute.edu.vn.chatbot_ec.request.MessageSendRequest;
 import hcmute.edu.vn.chatbot_ec.request.SummaryRequest;
 import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
@@ -59,6 +57,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
 
 /**
  * A dedicated activity for the chatbot interface.
@@ -77,11 +76,10 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private UserApiService userApiService = ApiClient.getUserApiService();
 
     private List<Pair<String, String>> recentPairs = new ArrayList<>();
-    private String currentUserMessage = null;
-    
+    private String summary;
+
     // Flag to prevent duplicate responses for the same user message
     private boolean isProcessingResponse = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,26 +88,27 @@ public class ChatGeminiActivity extends AppCompatActivity {
         initView();
         setupRecyclerView();
         startNewChatSession();
-        
+
         // Display which URL mode is being used
         boolean isEmulator = ChatGeminiUtils.isEmulator();
         String baseUrl = ChatGeminiUtils.getBaseUrl();
-        Toast.makeText(this, "Running on " + (isEmulator ? "emulator" : "physical device") + 
+        Toast.makeText(this, "Running on " + (isEmulator ? "emulator" : "physical device") +
                 "\nUsing URL: " + baseUrl, Toast.LENGTH_LONG).show();
-        Log.d("SpringBackend", "Device detection: " + (isEmulator ? "Emulator" : "Physical device") + 
-                " - Using URL: " + baseUrl);        
-          btnGeneratePrompt.setOnClickListener(v -> {
-            String userInput = edtPrompt.getText().toString().trim();
+        Log.d("SpringBackend", "Device detection: " + (isEmulator ? "Emulator" : "Physical device") +
+                " - Using URL: " + baseUrl);
+
+        btnGeneratePrompt.setOnClickListener(v -> {
+            String userInput = edtPrompt.getText().toString();
             if (userInput.isEmpty()) {
                 return; // Don't process empty messages
             }
-            
+
             // Prevent duplicate processing
             if (isProcessingResponse) {
                 Toast.makeText(this, "Đang xử lý tin nhắn trước đó, vui lòng đợi...", Toast.LENGTH_SHORT).show();
                 return;
             }
-            
+
             // Hiển thị ngay nội dung người dùng lên giao diện
             addMessageToChat(userInput, Message.SENT_BY_USER);
             edtPrompt.setText(""); // Xoá ô nhập
@@ -121,7 +120,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
             // Gửi nội dung người dùng đi (generateRequest already calls generateResponse internally)
             generateRequest(userInput);
         });
-        
+
         if (btnCloseChat != null) {
             btnCloseChat.setOnClickListener(v -> closeChatRedirectToMain());
         }
@@ -148,7 +147,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
     private void toggleUrlMode() {
         boolean isCurrentlyEmulator = ChatGeminiUtils.isEmulator();
-        
+
         // Toggle to the opposite mode
         if (ChatGeminiUtils.isManualOverrideEnabled()) {
             // If manual override already enabled, toggle the setting
@@ -157,15 +156,15 @@ public class ChatGeminiActivity extends AppCompatActivity {
             // Otherwise, enable manual override with opposite of current detection
             ChatGeminiUtils.enableManualOverride(!isCurrentlyEmulator);
         }
-        
+
         // Display the new setting
         String newMode = ChatGeminiUtils.isEmulator() ? "Emulator" : "Physical Device";
         String baseUrl = ChatGeminiUtils.getBaseUrl();
-        
-        Toast.makeText(this, "URL mode changed to: " + newMode + 
+
+        Toast.makeText(this, "URL mode changed to: " + newMode +
                 "\nURL: " + baseUrl, Toast.LENGTH_LONG).show();
-        
-        Log.d("SpringBackend", "URL mode manually toggled to: " + newMode + 
+
+        Log.d("SpringBackend", "URL mode manually toggled to: " + newMode +
                 " - Using URL: " + baseUrl);
     }
 
@@ -178,21 +177,21 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     Integer sessionId = response.body().getChatSessionId();
                     Integer userId = response.body().getUserId();
-                    
+
                     // Save the chat summary before closing
                     saveChatSummary(sessionId, userId);
                 }
-                
+
                 // Proceed with closing the activity and redirecting
                 Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }
-            
+
             @Override
             public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
                 Log.e("ChatSession", "Failed to get user information for summary", t);
-                
+
                 // Still redirect even if we couldn't save the summary
                 Intent intent = new Intent(ChatGeminiActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -204,10 +203,10 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         messageList = new ArrayList<>();
         chatAdapter = new ChatAdapter(messageList);
-        
+
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);  // Messages show from bottom
-        
+
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(chatAdapter);
     }
@@ -216,9 +215,6 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.d("GeminiAPI", "User Input: " + userInput);
 
         if (!userInput.isEmpty()) {
-            // Store the current user message for pairing with bot response
-            currentUserMessage = userInput;
-            
             // Add user message to database
             String token = TokenManager.getToken(this);
             userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
@@ -238,7 +234,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
                             welcomeMessageShown = true;
                             // Generate response using the new intent-based approach
                             generateResponse(userInput);
-                        }                        @Override
+                        }
+
+                        @Override
                         public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
                             Log.e("GeminiAPI", "Error in processing message", t);
                             runOnUiThread(() -> {
@@ -260,16 +258,17 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
 
     private void generateUserIntent(String originalPrompt, IntentCallback callback) {
-        InputStream inputStream = getResources().openRawResource(R.raw.intent_prompt);
-        Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
-        String promptTemplate = scanner.hasNext() ? scanner.next() : "";
+        String promptTemplate = ChatGeminiUtils.readFileFromAssets(getApplicationContext(), R.raw.intent_prompt);
         String structuredPrompt = String.format(promptTemplate, originalPrompt);
+
+        Log.d("Generate intent prompt", structuredPrompt);
 
         GeminiHelper.generateResponse(
                 structuredPrompt,
                 BuildConfig.API_KEY,
                 BuildConfig.MODEL_NAME,
-                (response, error) -> {                    runOnUiThread(() -> {
+                (response, error) -> {
+                    runOnUiThread(() -> {
                         if (error != null) {
                             Log.e("GeminiAPI", "Error generating JSON response", error);
                             Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
@@ -321,9 +320,16 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.d("App", "Handling intent: " + userIntent);
 
         switch (userIntent) {
+            case "product_overview":
+                handleProductOverview(originalPrompt);
+                break;
             case "search_product":
                 handleSearchProduct(originalPrompt);
                 break;
+            case "undetect_detail":
+                handleUndetecDetail();
+                break;
+
             case "check_order":
                 //handleCheckOrder(originalPrompt);
                 break;
@@ -333,9 +339,58 @@ public class ChatGeminiActivity extends AppCompatActivity {
             default:
                 handleUnknownIntent(originalPrompt);
         }
-    }    
-  
-  private void handleGreeting(String originalPrompt) {
+    }
+
+    private void saveMessage(String content, String sender){
+        addMessageToChat(content, Message.SENT_BY_BOT);
+
+        // Add bot message to database
+        String token = TokenManager.getToken(this);
+        userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    MessageSendRequest req = new MessageSendRequest();
+                    req.setContent(content);
+                    req.setSender(sender);
+                    req.setSessionId(response.body().getChatSessionId());
+                    req.setUserId(response.body().getUserId());
+
+                    chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<ResponseData<MessageResponse>>() {
+                        @Override
+                        public void onResponse(retrofit2.Call<ResponseData<MessageResponse>> call, retrofit2.Response<ResponseData<MessageResponse>> response) {
+                            Log.d("GeminiAPI", "Bot message saved with ID: " +
+                                    (response.isSuccessful() && response.body() != null && response.body().getData() != null ?
+                                            response.body().getData().getId() : "unknown"));
+                            resetProcessingState();
+
+                        }
+
+                        @Override
+                        public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
+                            Log.e("GeminiAPI", "Error saving bot message", t);
+                            resetProcessingState();
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+                Log.e("ChatSession", "Failed to get session info for final response", t);
+                resetProcessingState(); // Reset processing state even on failure
+            }
+        });
+    }
+
+    private void handleUndetecDetail() {
+    }
+
+    private void handleProductOverview(String originalPrompt) {
+    }
+
+    private void handleGreeting(String originalPrompt) {
         String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.greeting_prompt);
         assert promptTemplate != null;
         String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
@@ -352,31 +407,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                             resetProcessingState();
                         } else if (res != null) {
                             Log.d("GeminiAPI", "Response from Gemini: " + res);
-                            addMessageToChat(res, Message.SENT_BY_BOT);
-                            
-                            // Track the user-bot pair for summary generation
-                            if (currentUserMessage != null) {
-                                String token = TokenManager.getToken(this);
-                                userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
-                                    @Override
-                                    public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
-                                        if (response.isSuccessful() && response.body() != null) {
-                                            int sessionId = response.body().getChatSessionId();
-                                            onBotResponseReceived(currentUserMessage, res, sessionId);
-                                            currentUserMessage = null; // Reset after use
-                                        }
-                                        resetProcessingState(); // Reset processing state after successful completion
-                                    }
-                                    
-                                    @Override
-                                    public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
-                                        Log.e("ChatSession", "Failed to get session info for tracking", t);
-                                        resetProcessingState(); // Reset processing state even on failure
-                                    }
-                                });
-                            } else {
-                                resetProcessingState(); // Reset if no current user message
-                            }
+                            saveMessage(res, SENDER.BOT.getValue());
                         }
                     });
                     return kotlin.Unit.INSTANCE;
@@ -401,31 +432,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                             resetProcessingState();
                         } else if (res != null) {
                             Log.d("GeminiAPI", "Response from Gemini: " + res);
-                            addMessageToChat(res, Message.SENT_BY_BOT);
-                            
-                            // Track the user-bot pair for summary generation
-                            if (currentUserMessage != null) {
-                                String token = TokenManager.getToken(this);
-                                userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
-                                    @Override
-                                    public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
-                                        if (response.isSuccessful() && response.body() != null) {
-                                            int sessionId = response.body().getChatSessionId();
-                                            onBotResponseReceived(currentUserMessage, res, sessionId);
-                                            currentUserMessage = null; // Reset after use
-                                        }
-                                        resetProcessingState(); // Reset processing state after successful completion
-                                    }
-                                    
-                                    @Override
-                                    public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
-                                        Log.e("ChatSession", "Failed to get session info for tracking", t);
-                                        resetProcessingState(); // Reset processing state even on failure
-                                    }
-                                });
-                            } else {
-                                resetProcessingState(); // Reset if no current user message
-                            }
+                            saveMessage(res, SENDER.BOT.getValue());
                         }
                     });
                     return kotlin.Unit.INSTANCE;
@@ -439,10 +446,18 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
 
     private void extractSearchJsonThenSendToBackend(String originalPrompt) {
-        InputStream inputStream = getResources().openRawResource(R.raw.search_product_prompt);
-        Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
-        String promptTemplate = scanner.hasNext() ? scanner.next() : "";
-        String structuredPrompt = String.format(promptTemplate, originalPrompt);
+        String targetPrompt = originalPrompt;
+
+        if (summary!=null){
+            String promptTemplate = ChatGeminiUtils.readFileFromAssets(this, R.raw.summary_prompt);
+            String targetSummary = String.format(promptTemplate, originalPrompt + " and required before  " + summary);
+            Log.d("Summary not null", targetSummary);
+        }
+
+        String promptTemplateS = ChatGeminiUtils.readFileFromAssets(this, R.raw.search_product_prompt);
+        String structuredPrompt = String.format(promptTemplateS, targetPrompt);
+
+        Log.d("Generate summary prompt", structuredPrompt);
 
         GeminiHelper.generateResponse(
                 structuredPrompt,
@@ -468,7 +483,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void sendToSpringBackend(String jsonResponse, String originalPrompt, String intentType) {
         try {
             Log.d("SpringBackend", "Sending request to backend with intent: " + intentType);
-            
+
             // Configure OkHttpClient with timeouts
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
@@ -478,12 +493,12 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
             // Prepare request body with proper content type
             MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody body = RequestBody.create(jsonResponse, JSON);            
+            RequestBody body = RequestBody.create(jsonResponse, JSON);
             String endpoint = ChatGeminiUtils.getEndpointByIntent(intentType);
             String baseUrl = ChatGeminiUtils.getBaseUrl();
-            
+
             Log.d("SpringBackend", "Using " + (ChatGeminiUtils.isEmulator() ? "emulator" : "physical device") + " URL: " + baseUrl);
-            
+
             // Build request with headers
             Request request = new Request.Builder()
                     .url(baseUrl + endpoint)
@@ -546,8 +561,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
             Log.d("SpringBackend", "Response from backend (" + intentType + "): " + finalResponse);
             generateFinalResponse(originalPrompt, finalResponse, intentType);
         });
-    }    
-  
+    }
+
   // Cập nhật method generateFinalResponse để handle các intent khác nhau
     private void generateFinalResponse(String originalPrompt, String backendData, String intentType) {
         String systemContext = ChatGeminiUtils.getSystemContextForIntent(intentType);
@@ -565,51 +580,23 @@ public class ChatGeminiActivity extends AppCompatActivity {
                         if (error != null) {
                             handleGenerationError("tạo phản hồi cuối cùng", error);
                         } else if (finalResponse != null) {
-                            addMessageToChat(finalResponse, Message.SENT_BY_BOT);
                             Log.d("GeminiAPI", "Final Response (" + intentType + "): " + finalResponse);
-                            
-                            // Add bot message to database
-                            String token = TokenManager.getToken(this);
-                            userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
-                                @Override
-                                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
-                                    if (response.isSuccessful() && response.body() != null) {
-                                        MessageSendRequest req = new MessageSendRequest();
-                                        req.setContent(finalResponse);
-                                        req.setSender(SENDER.BOT.getValue());
-                                        req.setSessionId(response.body().getChatSessionId());
-                                        req.setUserId(response.body().getUserId());
+                           saveMessage(finalResponse, SENDER.BOT.getValue());
+                           String token = TokenManager.getToken(this);
+                           userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+                               @Override
+                               public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                                   if (response.isSuccessful() && response.body() != null){
+                                       onBotResponseReceived(response.body().getChatSessionId());
+                                       Log.d("GeminiAPI at trigger onBotResponseReceived", "Bot response received" + response.body().getChatSessionId());
+                                   }
+                               }
 
-                                        chatbotApiService.processMessage(req).enqueue(new retrofit2.Callback<ResponseData<MessageResponse>>() {
-                                            @Override
-                                            public void onResponse(retrofit2.Call<ResponseData<MessageResponse>> call, retrofit2.Response<ResponseData<MessageResponse>> response) {
-                                                Log.d("GeminiAPI", "Bot message saved with ID: " + 
-                                                    (response.isSuccessful() && response.body() != null && response.body().getData() != null ? 
-                                                    response.body().getData().getId() : "unknown"));
-                                            }
-
-                                            @Override
-                                            public void onFailure(retrofit2.Call<ResponseData<MessageResponse>> call, Throwable t) {
-                                                Log.e("GeminiAPI", "Error saving bot message", t);
-                                            }
-                                        });
-                                        
-                                        // Track the user-bot pair for summary generation
-                                        if (currentUserMessage != null) {
-                                            int sessionId = response.body().getChatSessionId();
-                                            onBotResponseReceived(currentUserMessage, finalResponse, sessionId);
-                                            currentUserMessage = null; // Reset after use
-                                        }
-                                        resetProcessingState(); // Reset processing state after successful completion
-                                    }
-                                }
-                                
-                                @Override
-                                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
-                                    Log.e("ChatSession", "Failed to get session info for final response", t);
-                                    resetProcessingState(); // Reset processing state even on failure
-                                }
-                            });
+                               @Override
+                               public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+                                   Log.d("GeminiAPI error at trigger onBotResponseReceived", "Bot response received" + t.getMessage());
+                               }
+                           });
                         }
                     });
                     return kotlin.Unit.INSTANCE;
@@ -624,7 +611,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.e("GeminiAPI", "Error at stage: " + stage, error);
         addMessageToChat("Xin lỗi, tôi đang gặp vấn đề xử lý. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
     }
-    
+
     private void handleServerError(int code, String response) {
         resetProcessingState();
         String errorMessage = "Lỗi từ server: " + code;
@@ -635,7 +622,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         Log.e("SpringBackend", "Server error: " + code + ", " + response);
         addMessageToChat("Xin lỗi, tôi đang gặp vấn đề với server. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
     }
-    
+
     private void handleEmptyResponse() {
         resetProcessingState();
         Toast.makeText(ChatGeminiActivity.this, "Không nhận được phản hồi từ server", Toast.LENGTH_SHORT).show();
@@ -643,7 +630,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
         addMessageToChat("Xin lỗi, tôi không nhận được phản hồi từ server. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
     }
 
-    
+
     /**
      * Resets the processing state to allow new messages to be processed
      */
@@ -651,50 +638,56 @@ public class ChatGeminiActivity extends AppCompatActivity {
         isProcessingResponse = false;
         showLoading(false);
     }
-  
-  private void addMessageToChat(String content, int sentBy) {
+
+    private void addMessageToChat(String content, int sentBy) {
 
         Message message = new Message(content, sentBy);
         chatAdapter.addMessage(message);
-        
+
         // Scroll to the bottom to show the latest message
         recyclerView.smoothScrollToPosition(messageList.size() - 1);
     }
 
-    /**
-     * Tracks user-bot message pairs and generates summary when 5 pairs are collected
-     */
-    public void onBotResponseReceived(String userMessage, String botMessage, int sessionId) {
-        recentPairs.add(new Pair<>(userMessage, botMessage));
+    // Get 5 most recent pairs of user and bot messages from recycler view
+    public void onBotResponseReceived(int sessionId) {
+        String lastUserMessage = null;
 
-        if (recentPairs.size() == 5) {
-            StringBuilder promptBuilder = new StringBuilder();
-            for (Pair<String, String> pair : recentPairs) {
-                promptBuilder.append("User: ").append(pair.first).append("\n");
-                promptBuilder.append("Bot: ").append(pair.second).append("\n");
+        for (int i = messageList.size()-1; i >= 0; i--){
+            Message message = messageList.get(i);
+            if (message.getSentBy() == Message.SENT_BY_USER){
+                lastUserMessage = message.getContent();
+            }else if (message.getSentBy()==Message.SENT_BY_BOT && lastUserMessage != null){
+                recentPairs.add(new Pair<>(lastUserMessage, message.getContent()));
+                lastUserMessage = null;
             }
-            String summaryPrompt = promptBuilder.toString();
-
-            // Call Gemini API with this prompt to generate a summary
-            requestSummaryFromGemini(summaryPrompt, summary -> {
-                // Save to session
-                updateSummaryChatSession(sessionId, summary);
-            });
-
-            recentPairs.clear();
+            if (recentPairs.size() >= 5) break;
         }
+
+        StringBuilder promptBuilder = new StringBuilder();
+        for (Pair<String, String> pair : recentPairs) {
+            promptBuilder.append("User: ").append(pair.first).append("\n");
+            promptBuilder.append("Bot: ").append(pair.second).append("\n");
+        }
+        String summaryPrompt = promptBuilder.toString();
+
+        // Call Gemini API with this prompt to generate a summary
+        requestSummaryFromGemini(summaryPrompt, (summary) -> {
+            // Save to session
+            updateSummaryChatSession(sessionId, summary);
+        });
+
+        recentPairs.clear();
     }
 
     /**
      * Requests a summary from Gemini API based on conversation pairs
      */
     private void requestSummaryFromGemini(String conversationPrompt, SummaryCallback callback) {
-        String summarySystemPrompt = "You are a helpful assistant that creates concise summaries of conversations. " +
-                "Please summarize the following conversation between a user and a chatbot in 2-3 sentences, " +
-                "focusing on the main topics discussed and any important outcomes:\n\n" + conversationPrompt;
+        String summaryPre = ChatGeminiUtils.readFileFromAssets(this, R.raw.summary_prompt);
+        String structuredPrompt = String.format(summaryPre, conversationPrompt);
 
         GeminiHelper.generateResponse(
-                summarySystemPrompt,
+                structuredPrompt,
                 BuildConfig.API_KEY,
                 BuildConfig.MODEL_NAME,
                 (response, error) -> {
@@ -704,6 +697,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                             callback.onSummaryGenerated("Failed to generate summary");
                         } else if (response != null) {
                             Log.d("GeminiAPI", "Summary generated: " + response);
+                            summary = response;
                             callback.onSummaryGenerated(response);
                         }
                     });
@@ -723,22 +717,22 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     Integer userId = response.body().getUserId();
                     SummaryRequest summaryRequest = new SummaryRequest(summary, userId);
-                    
+
                     chatbotApiService.updateSummaryChatSession(sessionId, summaryRequest)
                         .enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
                             @Override
-                            public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, 
+                            public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call,
                                                   retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
                                 if (response.isSuccessful() && response.body() != null) {
                                     Log.d("ChatSession", "Chat summary saved successfully for session " + sessionId);
-                                    Toast.makeText(ChatGeminiActivity.this, 
+                                    Toast.makeText(ChatGeminiActivity.this,
                                         "Summary generated and saved", Toast.LENGTH_SHORT).show();
                                 } else {
-                                    Log.e("ChatSession", "Failed to save chat summary: " + 
+                                    Log.e("ChatSession", "Failed to save chat summary: " +
                                         (response.errorBody() != null ? response.errorBody().toString() : "Unknown error"));
                                 }
                             }
-                            
+
                             @Override
                             public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
                                 Log.e("ChatSession", "Error saving chat summary", t);
@@ -746,7 +740,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                         });
                 }
             }
-            
+
             @Override
             public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
                 Log.e("ChatSession", "Failed to get user information for summary", t);
@@ -762,17 +756,21 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
     private void startNewChatSession() {
         String token = TokenManager.getToken(this);
-
-        chatbotApiService.checkExistsChatSession(token).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
-            @Override
+        Log.d("Start new chat session", "Checking session" + token);
+        chatbotApiService.checkExistsChatSession(token).enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {            @Override
             public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
-                assert response.body()!=null;
-
-                if (response.body().getData().isHasSession()){
-                    openChatSession(response.body().getData().getChatSessionId(), response.body().getData().getUserId());
-                }
-                else {
-                    createNewChatSession(response.body().getData().getUserId());
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    if (response.body().getData().isHasSession()){
+                        openChatSession(response.body().getData().getChatSessionId(), response.body().getData().getUserId());
+                    }
+                    else {
+                        createNewChatSession(response.body().getData().getUserId());
+                    }
+                } else {
+                    Log.e("ChatSession", "Failed to check session exists: response body is null or unsuccessful");
+                    Toast.makeText(ChatGeminiActivity.this, "Failed to check session status", Toast.LENGTH_SHORT).show();
+                    // Show welcome message as fallback
+                    showWelcomeMessage();
                 }
             }
 
@@ -793,21 +791,21 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     if (responseData.getData() != null && responseData.getData().getMessages() != null) {
                         // Clear existing messages
                         messageList.clear();
-                        
+
                         // Add all messages from the chat session
                         List<MessageResponse> messages = responseData.getData().getMessages();
                         for (MessageResponse msg : messages) {
                             // Determine if message is from bot or user
                             int sentBy = msg.getSender().equals(SENDER.BOT.getValue()) ?
                                 Message.SENT_BY_BOT : Message.SENT_BY_USER;
-                            
+
                             // Add message to the list
                             messageList.add(new Message(msg.getContent(), sentBy));
                         }
-                        
+
                         // Update the adapter
                         chatAdapter.notifyDataSetChanged();
-                        
+
                         // Scroll to the bottom to show latest message
                         if (!messageList.isEmpty()) {
                             recyclerView.smoothScrollToPosition(messageList.size() - 1);
@@ -817,7 +815,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                             // If no messages, show welcome message
                             showWelcomeMessage();
                         }
-                        
+
                         Log.d("ChatSession", "Loaded " + messageList.size() + " messages from session " + sessionId);
                     } else {
                         Log.d("ChatSession", "No messages found in session or session data is null");
@@ -825,8 +823,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.e("ChatSession", "Failed to load chat session: " + response.code());
-                    Toast.makeText(ChatGeminiActivity.this, 
-                        "Failed to load chat session. Error: " + response.code(), 
+                    Toast.makeText(ChatGeminiActivity.this,
+                        "Failed to load chat session. Error: " + response.code(),
                         Toast.LENGTH_SHORT).show();
                     showWelcomeMessage();
                 }
@@ -835,8 +833,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
             @Override
             public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
                 Log.e("ChatSession", "Error loading chat session", t);
-                Toast.makeText(ChatGeminiActivity.this, 
-                    "Connection error: " + t.getMessage(), 
+                Toast.makeText(ChatGeminiActivity.this,
+                    "Connection error: " + t.getMessage(),
                     Toast.LENGTH_SHORT).show();
                 showWelcomeMessage();
             }
@@ -852,7 +850,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 messageList.clear();
                 showWelcomeMessage();
                 if (response.isSuccessful() && response.body() != null) {
-                    Log.d("ChatSession", "New chat session created with ID: " + 
+                    Log.d("ChatSession", "New chat session created with ID: " +
                         (response.body().getData() != null ? response.body().getData().getChatSessionId() : "unknown"));
                 }
             }
@@ -860,8 +858,8 @@ public class ChatGeminiActivity extends AppCompatActivity {
             @Override
             public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
                 Log.e("ChatSession", "Failed to create new chat session", t);
-                Toast.makeText(ChatGeminiActivity.this, 
-                    "Failed to create chat session: " + t.getMessage(), 
+                Toast.makeText(ChatGeminiActivity.this,
+                    "Failed to create chat session: " + t.getMessage(),
                     Toast.LENGTH_SHORT).show();
             }
         });
@@ -873,31 +871,31 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void saveChatSummary(Integer sessionId, Integer userId) {
         // Create a simple summary message since we now handle summaries automatically
         String simpleSummary = "Chat session completed with " + messageList.size() + " messages exchanged.";
-        
+
         SummaryRequest summaryRequest = new SummaryRequest(simpleSummary, userId);
-        
+
         chatbotApiService.updateSummaryChatSession(sessionId, summaryRequest)
             .enqueue(new retrofit2.Callback<ResponseData<ChatSessionResponse>>() {
                 @Override
-                public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call, 
+                public void onResponse(retrofit2.Call<ResponseData<ChatSessionResponse>> call,
                                       retrofit2.Response<ResponseData<ChatSessionResponse>> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         Log.d("ChatSession", "Chat summary saved successfully for session " + sessionId);
-                        Toast.makeText(ChatGeminiActivity.this, 
+                        Toast.makeText(ChatGeminiActivity.this,
                             getString(R.string.summary_generated), Toast.LENGTH_SHORT).show();
                     } else {
-                        Log.e("ChatSession", "Failed to save chat summary: " + 
+                        Log.e("ChatSession", "Failed to save chat summary: " +
                             (response.errorBody() != null ? response.errorBody().toString() : "Unknown error"));
-                        Toast.makeText(ChatGeminiActivity.this, 
+                        Toast.makeText(ChatGeminiActivity.this,
                             getString(R.string.summary_failed), Toast.LENGTH_SHORT).show();
                     }
                 }
-                
+
                 @Override
                 public void onFailure(retrofit2.Call<ResponseData<ChatSessionResponse>> call, Throwable t) {
                     Log.e("ChatSession", "Error saving chat summary", t);
-                    Toast.makeText(ChatGeminiActivity.this, 
-                        getString(R.string.summary_failed) + ": " + t.getMessage(), 
+                    Toast.makeText(ChatGeminiActivity.this,
+                        getString(R.string.summary_failed) + ": " + t.getMessage(),
                         Toast.LENGTH_SHORT).show();
                 }
             });
@@ -919,12 +917,12 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     Toast.makeText(ChatGeminiActivity.this, "Could not get user info", Toast.LENGTH_SHORT).show();
                 }
             }
-            
+
             @Override
             public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
                 Log.e("ChatSession", "Failed to get user information for summary", t);
-                Toast.makeText(ChatGeminiActivity.this, 
-                    "Failed to generate summary: " + t.getMessage(), 
+                Toast.makeText(ChatGeminiActivity.this,
+                    "Failed to generate summary: " + t.getMessage(),
                     Toast.LENGTH_SHORT).show();
             }
         });

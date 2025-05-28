@@ -11,6 +11,7 @@ kotlin = "2.1.20"
 coreKtx = "1.16.0"
 materialVersion = "1.12.0"
 volley = "1.2.1"
+localagentsFc = "0.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -23,6 +24,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 material-v1110 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+localagents-fc = { group = "com.google.ai.edge.localagents", name = "localagents-fc", version.ref = "localagentsFc" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
