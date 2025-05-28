@@ -31,7 +31,6 @@ import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
 import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
 import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -82,14 +81,12 @@ public class OrderActivity extends AppCompatActivity {
         recyclerViewOrders.setVisibility(View.GONE);
         textEmptyOrders.setVisibility(View.GONE);        // Initialize authentication and load orders
         initializeAuthentication();
-    }
-
-    /**
+    }    /**
      * Initialize authentication following JWT pattern from HomeFragment
      */
     private void initializeAuthentication() {
-        // Validate token and handle expiration
-        if (!AuthUtils.validateAndHandleToken(this, false)) {
+        // Check if user is authenticated
+        if (!AuthUtils.isAuthenticated(this)) {
             Log.d(TAG, "No valid token found, redirecting to login");
             redirectToLogin();
             return;

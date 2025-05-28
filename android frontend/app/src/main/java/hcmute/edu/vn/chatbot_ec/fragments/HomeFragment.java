@@ -163,13 +163,12 @@ public class HomeFragment extends Fragment {
         if (getContext() == null) {
             return;
         }
-        
-        // Debug authentication state (remove in production)
+          // Debug authentication state (remove in production)
         debugSessionInfo();
         debugJWTTokenInfo();
         
-        // Validate token and handle expiration
-        if (!AuthUtils.validateAndHandleToken(getContext(), false)) {
+        // Check if user is authenticated
+        if (!AuthUtils.isAuthenticated(getContext())) {
             Log.d(TAG, "No valid token found, showing guest mode");
             showGuestMode();
             return;
@@ -467,7 +466,7 @@ private void displayUserInfo(UserDetailResponse user) {
                 return true;
             }            
 
-@Override
+            @Override
             public boolean onQueryTextChange(String newText) {
                 currentQuery = newText.trim();
                 searchHandler.removeCallbacks(searchRunnable);

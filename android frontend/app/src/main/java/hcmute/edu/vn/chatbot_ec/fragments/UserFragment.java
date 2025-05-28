@@ -30,7 +30,7 @@ import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
 import hcmute.edu.vn.chatbot_ec.response.UserResponse;
 import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
 import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -72,27 +72,20 @@ public class UserFragment extends Fragment {
         fabAddress = view.findViewById(R.id.fab_address);
         fabOrderHistory = view.findViewById(R.id.fab_order_history);        buttonLogout = view.findViewById(R.id.button_logout);
         progressBar = view.findViewById(R.id.progress_bar);
-        userApiService = ApiClient.getUserApiService();
-
-        // Show loading state
+        userApiService = ApiClient.getUserApiService();        // Show loading state
         progressBar.setVisibility(View.VISIBLE);
-        hideUserInfo();        // Check if user is authenticated and load user info
-        if (!AuthUtils.validateAndHandleToken(getContext(), true)) {
+        hideUserInfo();
+
+        // Check if user is authenticated and load user info
+        if (!AuthUtils.isAuthenticated(getContext())) {
             progressBar.setVisibility(View.GONE);
             showNotLoggedInState();
             return view;
         }
 
-        // Get user info directly from SessionManager
-        SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-        if (userInfo != null) {
-            progressBar.setVisibility(View.GONE);
-            displayUserInfoFromSession(userInfo);
-        } else {
-            // Fallback: If no user info in session, try to fetch it
-            // This should rarely happen if authentication flow is correct
-            fetchUserFromAPI();
-        }
+        // Since we're using TokenManager only, we need to fetch user info from API
+        // TokenManager doesn't store user information locally
+        fetchUserFromAPI();
 
         // Handle button clicks
         buttonEditProfile.setOnClickListener(v -> {
@@ -124,28 +117,25 @@ public class UserFragment extends Fragment {
             }        });
 
         return view;
-    }
-      private void fetchUserFromAPI() {
-        // Fallback method to fetch user info from API if not available in session
-        String token = SessionManager.getToken(getContext());
+    }    private void fetchUserFromAPI() {
+        // Fetch user info from API since TokenManager doesn't store user information
+        String token = TokenManager.getToken(getContext());
         if (token == null) {
             progressBar.setVisibility(View.GONE);
             showNotLoggedInState();
             return;
-        }
-
-        userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
+        }        userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                 if (isAdded() && getContext() != null) {
+                    progressBar.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
-                        Integer userId = response.body().getUserId();
-                        fetchUserDetails(userId);
+                        // Directly display user info from the UserResponse
+                        //displayUserInfoFromUserResponse(response.body());
                     } else if (response.code() == 401) {
                         // Handle unauthorized response
                         AuthUtils.handleUnauthorizedResponse(getContext());
                     } else {
-                        progressBar.setVisibility(View.GONE);
                         Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
                         showNotLoggedInState();
                     }
@@ -250,28 +240,24 @@ public class UserFragment extends Fragment {
         buttonLogout.setVisibility(View.VISIBLE);
     }
 
-    private void displayUserInfoFromSession(SessionManager.UserInfo userInfo) {
-        textFullName.setText(userInfo.fullName);
-        textEmail.setText(getString(R.string.email_label, userInfo.email));
-        
-//        // For phone, we might not have it in SessionManager, so handle gracefully
-//        if (userInfo.phone != null && !userInfo.phone.isEmpty()) {
-//            textPhone.setText(getString(R.string.phone_label, userInfo.phone));
-//        } else {
-//            textPhone.setText(getString(R.string.phone_label, "Chưa cập nhật"));
-//        }
-        
-        // For verified status, we might not have it in SessionManager
-        textVerifiedStatus.setText("Đã xác thực"); // Default to verified for now
-        textVerifiedStatus.setSelected(true);
-        
-        imageAvatar.setContentDescription(getString(R.string.avatar_description, userInfo.fullName));
+    private void displayUserInfoFromAPI(UserResponse userResponse) {
+        imageAvatar.setContentDescription(getString(R.string.avatar_description, userResponse.getFullName()));
 
-        // Load default avatar since we don't have avatar URL in SessionManager
-        Glide.with(this)
-                .load(R.drawable.ic_user_placeholder)
-                .circleCrop()
-                .into(imageAvatar);
+        // Load avatar if available, otherwise use default
+        String avatarUrl = userResponse.getAvatarUrl();
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(avatarUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_user_placeholder)
+                    .error(R.drawable.ic_user_placeholder)
+                    .into(imageAvatar);
+        } else {
+            Glide.with(this)
+                    .load(R.drawable.ic_user_placeholder)
+                    .circleCrop()
+                    .into(imageAvatar);
+        }
 
         // Show user info views
         textFullName.setVisibility(View.VISIBLE);

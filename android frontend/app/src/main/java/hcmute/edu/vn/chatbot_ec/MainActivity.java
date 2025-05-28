@@ -53,13 +53,16 @@ public class MainActivity extends AppCompatActivity {
                 handleLoginBroadcast();
             }
         }
-    };
-
+    };    
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        // Initialize bottomNavigationView first
+        bottomNavigationView = findViewById(R.id.bottomNavView);
 
         // Check current authentication state using enhanced AuthUtils
         checkAuthenticationState();
@@ -67,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Start authentication service for background token monitoring
         AuthenticationService.startService(this);
-
-        bottomNavigationView = findViewById(R.id.bottomNavView);
         bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -146,8 +147,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void checkAuthenticationState() {
         boolean wasAuthenticated = isUserAuthenticated;
-        isUserAuthenticated = AuthUtils.validateAndHandleToken(this, false);
-        
+
         Log.d(TAG, "Authentication state check - was: " + wasAuthenticated + ", now: " + isUserAuthenticated);
         
         // If authentication state changed, refresh current fragment
@@ -175,11 +175,16 @@ public class MainActivity extends AppCompatActivity {
         refreshCurrentFragment();
         Toast.makeText(this, "Đã đăng nhập", Toast.LENGTH_SHORT).show();
     }
-    
-    /**
+      /**
      * Refresh the current fragment with updated authentication state
      */
     private void refreshCurrentFragment() {
+        // Check if bottomNavigationView is initialized
+        if (bottomNavigationView == null) {
+            Log.d(TAG, "BottomNavigationView not initialized yet, skipping fragment refresh");
+            return;
+        }
+        
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment != null) {
             // Get the currently selected item in bottom navigation
