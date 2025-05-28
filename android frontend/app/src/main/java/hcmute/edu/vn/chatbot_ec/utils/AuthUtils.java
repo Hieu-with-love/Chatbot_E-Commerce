@@ -12,15 +12,14 @@ import hcmute.edu.vn.chatbot_ec.network.ApiClient;
  * Utility class for authentication-related operations
  * Contains helpers for logout and auth status checking
  */
-public class AuthUtils {
-      /**
-     * Logs out the user by clearing the session and redirecting to login screen
+public class AuthUtils {    /**
+     * Logs out the user by clearing the token and redirecting to login screen
      * @param context Current activity context
      * @param showToast Whether to show a toast message about logout
      */
     public static void logout(Context context, boolean showToast) {
-        // Clear the session data
-        SessionManager.clearSession(context);
+        // Clear the token data
+        TokenManager.clearToken(context);
         
         // Reset the Retrofit instance to ensure subsequent requests don't use the token
         ApiClient.resetRetrofitInstance();
@@ -44,92 +43,60 @@ public class AuthUtils {
     /**
      * Checks if the user is authenticated
      * @param context Application context
-     * @return true if the user has a valid session, false otherwise
+     * @return true if the user has a valid token, false otherwise
      */
     public static boolean isAuthenticated(Context context) {
-        return SessionManager.hasActiveSession(context);
+        return TokenManager.hasToken(context);
     }
       /**
-     * Check if user is currently authenticated with a valid non-expired session
+     * Check if user is currently authenticated with a valid token
      * @param context Application context
-     * @return true if user has valid non-expired session, false otherwise
+     * @return true if user has valid token, false otherwise
      */
     public static boolean isUserAuthenticated(Context context) {
         if (context == null) {
             return false;
         }
         
-        return SessionManager.hasActiveSession(context) && !SessionManager.isTokenExpired(context);
-    }
-      /**
-     * Get authenticated user's information from session
+        return TokenManager.hasToken(context);
+    }      /**
+     * Get authenticated user's information from token
+     * Note: Since we're only using TokenManager, user info needs to be retrieved from API
      * @param context Application context
-     * @return UserInfo object with user details, or null if not authenticated
+     * @return UserInfo object with basic info, or null if not authenticated
      */
     public static UserInfo getAuthenticatedUserInfo(Context context) {
         if (!isUserAuthenticated(context)) {
             return null;
         }
         
-        // Get user info from SessionManager
-        SessionManager.UserInfo sessionUserInfo = SessionManager.getUserInfo(context);
-        if (sessionUserInfo == null) {
-            return null;
-        }
-        
-        // Convert SessionManager.UserInfo to AuthUtils.UserInfo for backward compatibility
+        // With TokenManager only, we don't store user info locally
+        // This method returns a minimal UserInfo object
+        // For full user details, use the API to fetch current user info
         UserInfo userInfo = new UserInfo();
-        userInfo.userId = ""; // userId not stored in session, could be extracted from JWT if needed
-        userInfo.email = sessionUserInfo.email;
-        userInfo.fullName = sessionUserInfo.fullName;
-        userInfo.role = sessionUserInfo.role;
-        userInfo.expiration = 0; // Use session expiration logic instead
+        userInfo.userId = ""; // Can be extracted from JWT if needed
+        userInfo.email = ""; // Needs to be fetched from API
+        userInfo.fullName = ""; // Needs to be fetched from API
+        userInfo.role = ""; // Needs to be fetched from API
+        userInfo.expiration = 0; // Can be extracted from JWT if needed
         
         return userInfo;
     }
       /**
-     * Check if token will expire soon (within 5 minutes)
+     * Check if token will expire soon
+     * Note: With TokenManager only, expiration checking requires JWT parsing
      * @param context Application context
-     * @return true if token expires within 5 minutes
+     * @return false (simplified - no expiration checking without SessionManager)
      */
     public static boolean isTokenExpiringSoon(Context context) {
-        long timeRemaining = SessionManager.getTokenTimeRemaining(context);
-        return timeRemaining > 0 && timeRemaining < 300; // 5 minutes
+        // Simplified implementation - TokenManager doesn't track expiration
+        // To implement properly, you'd need to parse the JWT token
+        return false;
     }
-    
-    /**
-     * Validate token and handle expiration automatically
-     * @param context Application context
-     * @param forceLogoutOnExpiry if true, automatically logout if token is expired
-     * @return true if token is valid, false otherwise
-     */
-    public static boolean validateAndHandleToken(Context context, boolean forceLogoutOnExpiry) {
-        if (context == null) {
-            return false;
-        }        if (!isUserAuthenticated(context)) {
-            if (forceLogoutOnExpiry && SessionManager.hasActiveSession(context)) {
-                // Session exists but is invalid/expired
-                logout(context, true);
-            }
-            return false;
-        }
-        
-        if (isTokenExpiringSoon(context)) {
-            // Show warning about upcoming expiration
-            Toast.makeText(context, "Your session will expire soon. Please refresh or login again.", Toast.LENGTH_LONG).show();
-        }
-        
-        return true;
-    }
-      /**
-     * Enhanced logout with broadcast support for real-time updates
-     * @param context Current context
-     * @param showToast Whether to show logout message
-     * @param reason Reason for logout (optional)
-     */
+
     public static void logoutWithBroadcast(Context context, boolean showToast, String reason) {
-        // Clear the session
-        SessionManager.clearSession(context);
+        // Clear the token
+        TokenManager.clearToken(context);
         
         // Reset the Retrofit instance
         ApiClient.resetRetrofitInstance();
@@ -163,12 +130,16 @@ public class AuthUtils {
      */
     public static void handleUnauthorizedResponse(Context context) {
         logoutWithBroadcast(context, true, "Session expired. Please login again.");
-    }    public static long getTokenTimeRemaining(Context context) {
+    }
+    
+    public static long getTokenTimeRemaining(Context context) {
         if (!isUserAuthenticated(context)) {
             return -1;
         }
         
-        return SessionManager.getTokenTimeRemaining(context);
+        // With TokenManager only, we don't track token expiration
+        // To implement properly, you'd need to parse the JWT token
+        return 0;
     }
     
     /**

@@ -41,6 +41,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.localagents.fc)
     // Add Java 8+ API desugaring support
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 

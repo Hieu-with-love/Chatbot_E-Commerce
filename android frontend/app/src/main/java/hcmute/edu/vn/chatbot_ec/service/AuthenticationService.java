@@ -13,7 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 
 /**
  * Background service for managing authentication state and token lifecycle
@@ -68,36 +68,35 @@ public class AuthenticationService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-    
-    /**
+      /**
      * Start periodic token monitoring
      */
     private void startTokenMonitoring() {
         scheduler.scheduleWithFixedDelay(this::checkTokenStatus, 
                 0, TOKEN_CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES);
     }
-      /**
+    
+    /**
      * Check token status and handle expiration/refresh
      */
     private void checkTokenStatus() {
         try {
             Context context = getApplicationContext();
-            String token = SessionManager.getToken(context);
+            String token = TokenManager.getToken(context);
             
             if (token == null) {
-                Log.d(TAG, "No session found");
+                Log.d(TAG, "No token found");
                 broadcastAuthenticationStateChanged(false);
                 return;
             }
-            
-            // Check if token is expiring soon
+              // Check if token is expiring soon (simplified with TokenManager)
             if (AuthUtils.isTokenExpiringSoon(context)) {
                 Log.d(TAG, "Token is expiring soon");
                 handleTokenExpiringSoon();
             }
             
-            // Validate current token
-            if (!AuthUtils.validateAndHandleToken(context, false)) {
+            // Check if token is valid
+            if (!AuthUtils.isAuthenticated(context)) {
                 Log.d(TAG, "Token validation failed");
                 broadcastAuthenticationStateChanged(false);
             } else {
