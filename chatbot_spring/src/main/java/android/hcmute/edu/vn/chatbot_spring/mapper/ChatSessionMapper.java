@@ -30,6 +30,7 @@ public class ChatSessionMapper {    /**
                         .map(ChatSessionMapper::toMessageResponse)
                         .collect(Collectors.toList()))
                 .chatSessionId(session.getId())
+                .summary(session.getSummary())
                 .build();
     }    /**
      * Convert a Message entity to a MessageResponse

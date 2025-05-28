@@ -65,14 +65,15 @@ public class AppConfig {
                         manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(provider()).addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(authReqs ->
-                        authReqs.requestMatchers(apiPrefix + "/auth/**").permitAll()
-                                .requestMatchers(apiPrefix + "/public/**").permitAll()
-                                .requestMatchers(apiPrefix + "/customer/**").hasAnyRole("CUSTOMER", "OWNER", "ADMIN")
-                                .requestMatchers(apiPrefix + "/owner/**").hasAnyRole("OWNER", "ADMIN")
-                                .requestMatchers(apiPrefix + "/admin/**").hasRole("ADMIN")
-                                .anyRequest().authenticated()
-                ).exceptionHandling(ex -> ex
+//                .authorizeHttpRequests(authReqs ->
+//                        authReqs.requestMatchers(apiPrefix + "/auth/**").permitAll()
+//                                .requestMatchers(apiPrefix + "/public/**").permitAll()
+//                                .requestMatchers(apiPrefix + "/customer/**").hasAnyRole("CUSTOMER", "OWNER", "ADMIN")
+//                                .requestMatchers(apiPrefix + "/owner/**").hasAnyRole("OWNER", "ADMIN")
+//                                .requestMatchers(apiPrefix + "/admin/**").hasRole("ADMIN")
+//                                .anyRequest().authenticated()
+//                )
+                .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                 );

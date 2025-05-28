@@ -38,5 +38,4 @@ public interface ChatbotService {
 
     void updateChatSession(Integer id);
     ChatSessionResponse updateSummaryChatSession(Integer sessionId, SummaryRequest request);
-
 }

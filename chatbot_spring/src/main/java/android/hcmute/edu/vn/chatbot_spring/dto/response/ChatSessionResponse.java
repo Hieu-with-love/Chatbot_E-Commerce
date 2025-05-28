@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Lob;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +24,6 @@ public class ChatSessionResponse {
     private List<MessageResponse> messages;
     private boolean hasSession;
     private Integer chatSessionId;
+    @Lob
+    private String summary;
 }
