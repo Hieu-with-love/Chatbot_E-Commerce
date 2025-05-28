@@ -1,5 +1,7 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
+import static java.security.AccessController.getContext;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,7 +44,7 @@ import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
 import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
 import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
-import hcmute.edu.vn.chatbot_ec.utils.SessionManager;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -137,7 +139,9 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "Receiver was not registered");
             }
         }
-    }      private void initViews(View view) {
+    }
+
+    private void initViews(View view) {
         rvProducts = view.findViewById(R.id.rv_products);
         imgUserAvatar = view.findViewById(R.id.img_user_avatar);
         imgCart = view.findViewById(R.id.img_cart);
@@ -180,29 +184,25 @@ public class HomeFragment extends Fragment {
         }
   }
 
-    }private void loadUserProfile() {
-        // Get user info directly from SessionManager first
-        SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-        
-        if (userInfo != null && userInfo.fullName != null && !userInfo.fullName.trim().isEmpty()) {
-            Log.d(TAG, "Displaying user info from SessionManager: " + userInfo.toString());
-            displayUserInfoFromSession(userInfo.fullName, userInfo.role);
-            return;
-        }
-
-        // Fallback: Try to get user info from JWT token
+    private void loadUserProfile() {
+        // Get JWT token from TokenManager
         String token = TokenManager.getToken(getContext());
+        
         if (token != null && !JwtUtils.isTokenExpired(token)) {
-            String fullNameFromJWT = JwtUtils.getFullNameFromToken(token);
-            if (fullNameFromJWT != null && !fullNameFromJWT.trim().isEmpty()) {
-                Log.d(TAG, "Displaying user info from JWT token");
+            // Extract user info from JWT token
+            String fullName = JwtUtils.getFullNameFromToken(token);
+            String role = JwtUtils.getRoleFromToken(token);
+            String userId = JwtUtils.getUserIdFromToken(token);
+            
+            if (fullName != null && !fullName.trim().isEmpty()) {
+                Log.d(TAG, "Displaying user info from JWT token: " + fullName);
                 displayUserInfoFromJWT(token);
                 return;
             }
         }
 
-        // If no user info in session or JWT, user might not be logged in
-        Log.w(TAG, "No user info found in session or JWT, switching to guest mode");
+        // If no valid token or user info, user might not be logged in
+        Log.w(TAG, "No valid token or user info found, switching to guest mode");
         showGuestMode();
     }
 
@@ -226,10 +226,10 @@ public class HomeFragment extends Fragment {
                     Log.w(TAG, "Unauthorized response - token may be expired");
                     AuthUtils.handleUnauthorizedResponse(getContext());                } else {
                     Log.w(TAG, "Failed to load user details: " + response.code());
-                    // If we have SessionManager data, fallback to displaying that
-                    SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-                    if (userInfo != null && userInfo.fullName != null) {
-                        displayUserInfoFromSession(userInfo.fullName, userInfo.role);
+                    // If we have JWT token, fallback to displaying that
+                    String token = TokenManager.getToken(getContext());
+                    if (token != null && !JwtUtils.isTokenExpired(token)) {
+                        displayUserInfoFromJWT(token);
                     } else {
                         showGuestMode();
                     }
@@ -238,10 +238,10 @@ public class HomeFragment extends Fragment {
             public void onFailure(Call<UserDetailResponse> call, Throwable t) {
                 Log.e(TAG, "Network error loading user details", t);
                 if (getActivity() != null) {
-                    // Fallback to SessionManager data if available
-                    SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-                    if (userInfo != null && userInfo.fullName != null) {
-                        displayUserInfoFromSession(userInfo.fullName, userInfo.role);
+                    // Fallback to JWT token data if available
+                    String token = TokenManager.getToken(getContext());
+                    if (token != null && !JwtUtils.isTokenExpired(token)) {
+                        displayUserInfoFromJWT(token);
                     } else {
                         showGuestMode();
                     }
@@ -270,60 +270,14 @@ private void displayUserInfo(UserDetailResponse user) {
         
         // TODO: Load user avatar from URL if available
         // For now, keep the default placeholder
-    }/**
-     * Display user information from SessionManager
-     * @param fullName User's full name from SessionManager
-     * @param role User's role from SessionManager (optional)
-     */    private void displayUserInfoFromSession(String fullName, String role) {
-        Log.d(TAG, "Displaying user info from SessionManager for: " + fullName + ", Role: " + role);
-        
-        // Show user avatar and name, hide login button
-        imgUserAvatar.setVisibility(View.VISIBLE);
-        
-        // Customize greeting based on role
-        String greeting = "Chào bạn,";
-        if (role != null && !role.trim().isEmpty()) {
-            if (role.equalsIgnoreCase("ADMIN")) {
-                greeting = "Chào Admin,";
-            } else if (role.equalsIgnoreCase("MANAGER")) {
-                greeting = "Chào Quản lý,";
-            } else if (role.equalsIgnoreCase("VIP")) {
-                greeting = "Chào thành viên VIP,";
-            }
-        }
-          tvGreeting.setText(greeting);
-        tvFullName.setText(fullName);
-        tvFullName.setVisibility(View.VISIBLE);
-        btnLogin.setVisibility(View.GONE);
-        
-        // Show cart icon when user is authenticated
-        if (imgCart != null) {
-            imgCart.setVisibility(View.VISIBLE);
-        }
-        
-        // Update SearchView constraints when login button is hidden
-        updateSearchViewConstraints(false);
-        
-        // Use default avatar placeholder for session-based display
-        // Can be enhanced later to load avatar from additional API call if needed
-    }
-    
-    /**
-     * Display user information extracted from JWT token
-     * @param token JWT token containing user information
+    }    /**
+     * Display user information with customizable greeting
+     * @param fullName User's full name
+     * @param role User's role (optional)
+     * @param userId User's ID for cart functionality (optional)
      */
-    private void displayUserInfoFromJWT(String token) {
-        if (token == null || JwtUtils.isTokenExpired(token)) {
-            Log.w(TAG, "Cannot display user info: token is null or expired");
-            showGuestMode();
-            return;
-        }
-        
-        String fullName = JwtUtils.getFullNameFromToken(token);
-        String role = JwtUtils.getRoleFromToken(token);
-        String userId = JwtUtils.getUserIdFromToken(token);
-        
-        Log.d(TAG, "Displaying user info from JWT for: " + fullName + ", Role: " + role + ", ID: " + userId);
+    private void displayUserInfoFromToken(String fullName, String role, String userId) {
+        Log.d(TAG, "Displaying user info for: " + fullName + ", Role: " + role + ", ID: " + userId);
         
         // Show user avatar and name, hide login button
         imgUserAvatar.setVisibility(View.VISIBLE);
@@ -338,7 +292,9 @@ private void displayUserInfo(UserDetailResponse user) {
             } else if (role.equalsIgnoreCase("VIP")) {
                 greeting = "Chào thành viên VIP,";
             }
-        }          tvGreeting.setText(greeting);
+        }
+        
+        tvGreeting.setText(greeting);
         tvFullName.setText(fullName != null ? fullName : "User");
         tvFullName.setVisibility(View.VISIBLE);
         btnLogin.setVisibility(View.GONE);
@@ -356,12 +312,29 @@ private void displayUserInfo(UserDetailResponse user) {
             try {
                 this.userId = Integer.parseInt(userId);
             } catch (NumberFormatException e) {
-                Log.w(TAG, "Cannot parse user ID from JWT: " + userId);
+                Log.w(TAG, "Cannot parse user ID: " + userId);
             }
         }
+    }
+      /**
+     * Display user information extracted from JWT token
+     * @param token JWT token containing user information
+     */
+    private void displayUserInfoFromJWT(String token) {
+        if (token == null || JwtUtils.isTokenExpired(token)) {
+            Log.w(TAG, "Cannot display user info: token is null or expired");
+            showGuestMode();
+            return;
+        }
         
-        // Use default avatar placeholder for JWT-based display
-        // Can be enhanced later to load avatar from additional API call if needed
+        String fullName = JwtUtils.getFullNameFromToken(token);
+        String role = JwtUtils.getRoleFromToken(token);
+        String userId = JwtUtils.getUserIdFromToken(token);
+        
+        Log.d(TAG, "Displaying user info from JWT for: " + fullName + ", Role: " + role + ", ID: " + userId);
+        
+        // Use the generic display method
+        displayUserInfoFromToken(fullName, role, userId);
     }
       private void showGuestMode() {
         Log.d(TAG, "Showing guest mode UI");
@@ -507,14 +480,17 @@ private void displayUserInfo(UserDetailResponse user) {
                         if (isAdded() && getContext() != null) {
                             fetchProducts(currentPage, pageSize, "id", "asc", "");
                         }
-                    });
-                } else {
+                    });                } else {
                     searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
-                }                return true;
-            }});        // Get userId from JWT token for cart operations
-        SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-        if (userInfo != null && userInfo.token != null) {
-            String userIdStr = JwtUtils.getUserIdFromToken(userInfo.token);
+                }
+                return true;
+            }
+        });
+
+        // Get userId from JWT token for cart operations
+        String token = TokenManager.getToken(getContext());
+        if (token != null && !JwtUtils.isTokenExpired(token)) {
+            String userIdStr = JwtUtils.getUserIdFromToken(token);
             if (userIdStr != null && !userIdStr.trim().isEmpty()) {
                 try {
                     userId = Integer.parseInt(userIdStr);
@@ -527,19 +503,7 @@ private void displayUserInfo(UserDetailResponse user) {
         
         // Start loading products
         fetchProducts(currentPage, pageSize, "id", "asc", "");
-                searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
-                return true;
-            }        });
-        rvProducts.setAdapter(adapter);
-        
-        // Fetch user information for cart functionality
-        loadUserInfoForCart();
-        
-        // Load initial products
-        fetchProducts(currentPage, pageSize, "id", "asc", "");
-    }
-
-    /**
+    }    /**
      * Load user information specifically for cart functionality and user ID
      * This works alongside the top bar authentication but focuses on getting userId
      */
@@ -559,46 +523,9 @@ private void displayUserInfo(UserDetailResponse user) {
             }
         }
         
-        // Fallback: Fetch user info from API if JWT doesn't have user ID or is invalid
-        if (token != null) {
-            UserApiService userApiService = ApiClient.getUserApiService();
-            userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
-                @Override
-                public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-                    if (isAdded() && getContext() != null) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            userId = response.body().getUserId();
-                            Log.d(TAG, "User ID loaded from API: " + userId);
-                            
-                            // Update avatar if not already set by top bar logic
-                            String avatarUrl = response.body().getAvatarUrl();
-                            if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                                Glide.with(HomeFragment.this)
-                                        .load(avatarUrl)
-                                        .placeholder(R.drawable.ic_user_placeholder)
-                                        .error(R.drawable.ic_user_placeholder)
-                                        .circleCrop()
-                                        .into(imgUserAvatar);
-                            }
-                        } else if (response.code() == 401) {
-                            Log.w(TAG, "Token expired while fetching user info");
-                            AuthUtils.handleUnauthorizedResponse(getContext());
-                        } else {
-                            Log.w(TAG, "Failed to load user info from API: " + response.code());
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<UserResponse> call, Throwable t) {
-                    if (isAdded() && getContext() != null) {
-                        Log.e(TAG, "Network error while fetching user info", t);
-                    }
-                }
-            });
-        } else {
-            Log.d(TAG, "No token available for user info fetching");
-        }
+        // Fallback: If no valid token or user ID, clear user ID
+        userId = null;
+        Log.d(TAG, "No valid token available for user info fetching");
     }
 
     @Override
@@ -616,27 +543,45 @@ private void displayUserInfo(UserDetailResponse user) {
     public void refreshAuthenticationState() {
         setupTopBar();
     }    /**
-     * Debug method to log SessionManager information
-     * Useful for development and debugging
+     * Debug method to log TokenManager information
+     * Useful for development and debugging JWT token integration
      */
     private void debugSessionInfo() {
         if (getContext() == null) {
-            Log.d(TAG, "Session Debug: Context is null");
+            Log.d(TAG, "Token Debug: Context is null");
             return;
         }
         
-        Log.d(TAG, "Session Debug: Has active session: " + SessionManager.hasActiveSession(getContext()));
-        Log.d(TAG, "Session Debug: Is token expired: " + SessionManager.isTokenExpired(getContext()));
+        String token = TokenManager.getToken(getContext());
+        boolean hasToken = TokenManager.hasToken(getContext());
+        boolean isExpired = token != null ? JwtUtils.isTokenExpired(token) : true;
         
-        SessionManager.UserInfo userInfo = SessionManager.getUserInfo(getContext());
-        if (userInfo != null) {
-            Log.d(TAG, "Session Debug: Email: " + userInfo.email);
-            Log.d(TAG, "Session Debug: Full Name: " + userInfo.fullName);
-            Log.d(TAG, "Session Debug: Role: " + userInfo.role);
+        Log.d(TAG, "Token Debug: Has token: " + hasToken);
+        Log.d(TAG, "Token Debug: Is token expired: " + isExpired);
+        
+        if (token != null && !isExpired) {
+            String email = JwtUtils.getEmailFromToken(token);
+            String fullName = JwtUtils.getFullNameFromToken(token);
+            String role = JwtUtils.getRoleFromToken(token);
+            String userId = JwtUtils.getUserIdFromToken(token);
+            
+            Log.d(TAG, "Token Debug: Email: " + email);
+            Log.d(TAG, "Token Debug: Full Name: " + fullName);
+            Log.d(TAG, "Token Debug: Role: " + role);
+            Log.d(TAG, "Token Debug: User ID: " + userId);
+            
+            // Calculate time remaining from JWT expiration
+            long expiration = JwtUtils.getExpirationFromToken(token);
+            if (expiration > 0) {
+                long currentTime = System.currentTimeMillis() / 1000;
+                long timeLeft = expiration - currentTime;
+                Log.d(TAG, "Token Debug: Time left (seconds): " + Math.max(0, timeLeft));
+            } else {
+                Log.d(TAG, "Token Debug: No expiration information available");
+            }
+        } else {
+            Log.d(TAG, "Token Debug: No valid token available");
         }
-        
-        long timeLeft = SessionManager.getTokenTimeRemaining(getContext());
-        Log.d(TAG, "Session Debug: Time left (seconds): " + timeLeft);
     }
     
     /**
