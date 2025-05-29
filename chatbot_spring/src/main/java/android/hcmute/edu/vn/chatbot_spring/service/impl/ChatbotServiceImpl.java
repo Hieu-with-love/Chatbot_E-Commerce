@@ -7,6 +7,7 @@ import android.hcmute.edu.vn.chatbot_spring.dto.request.MessageSendRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.SummaryRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderResponse;
 import android.hcmute.edu.vn.chatbot_spring.enums.SENDER;
 import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
 import android.hcmute.edu.vn.chatbot_spring.mapper.ChatSessionMapStruct;
@@ -16,6 +17,7 @@ import android.hcmute.edu.vn.chatbot_spring.model.Message;
 import android.hcmute.edu.vn.chatbot_spring.model.User;
 import android.hcmute.edu.vn.chatbot_spring.repository.ChatSessionRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.MessageRepository;
+import android.hcmute.edu.vn.chatbot_spring.repository.OrderRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.UserRepository;
 import android.hcmute.edu.vn.chatbot_spring.service.ChatbotService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class ChatbotServiceImpl implements ChatbotService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final OrderRepository orderRepository;
     
     // MapStruct mappers
     private final ChatSessionMapStruct chatSessionMapper;
@@ -182,6 +185,11 @@ public class ChatbotServiceImpl implements ChatbotService {
         chatSession.setSummary(req.getSummary());
         chatSessionRepository.save(chatSession);
         return chatSessionMapper.toResponse(chatSession);
+    }
+
+    @Override
+    public OrderResponse checkUserOrder(Integer userId) {
+        return null;
     }
 
     private ChatSession getChatSessionById(int sessionId) {
