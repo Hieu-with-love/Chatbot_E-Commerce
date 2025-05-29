@@ -327,7 +327,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 handleSearchProduct(originalPrompt);
                 break;
             case "undetect_detail":
-                handleUndetecDetail();
+                handleUndetectDetail();
                 break;
 
             case "check_order":
@@ -384,10 +384,33 @@ public class ChatGeminiActivity extends AppCompatActivity {
         });
     }
 
-    private void handleUndetecDetail() {
+    private void handleUndetectDetail() {
     }
 
     private void handleProductOverview(String originalPrompt) {
+        String structuredPrompt = ChatGeminiUtils.structuredSummary(getApplicationContext(),
+                originalPrompt,
+                summary,
+                R.raw.product_overview_prompt);
+
+        GeminiHelper.generateResponse(
+                structuredPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (res, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("GeminiAPI", "Error generating response", error);
+                            resetProcessingState();
+                        } else if (res != null) {
+                            Log.d("GeminiAPI", "Response from Gemini: " + res);
+                            saveMessage(res, SENDER.BOT.getValue());
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE;
+                }
+        );
     }
 
     private void handleGreeting(String originalPrompt) {
@@ -418,7 +441,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
     private void handleUnknownIntent(String originalPrompt) {
         // If don't realize prompt. just use gemini model return
         String promptTemplate = ChatGeminiUtils.readFileFromAssets(this,R.raw.unknown_prompt);
-        String structuredPrompt = promptTemplate.replace("{{user_input}}", originalPrompt);
+        String structuredPrompt = String.format(promptTemplate, originalPrompt);
 
         GeminiHelper.generateResponse(
                 structuredPrompt,

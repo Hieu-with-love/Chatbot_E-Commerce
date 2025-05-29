@@ -13,4 +13,4 @@ Here are some example reply styles:
 
 Now, based on the user’s message below, please write a short and friendly response in Vietnamese:
 
-User: {{user_input}}
+User: "%s"
