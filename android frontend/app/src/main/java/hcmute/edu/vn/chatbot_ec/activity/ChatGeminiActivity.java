@@ -331,7 +331,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
                 break;
 
             case "check_order":
-                //handleCheckOrder(originalPrompt);
+                handleCheckOrder(originalPrompt);
                 break;
             case "greeting":
                 handleGreeting(originalPrompt);
@@ -463,6 +463,103 @@ public class ChatGeminiActivity extends AppCompatActivity {
         );
     }
 
+    private void handleCheckOrder(String originalPrompt) {
+        showLoading(true);
+        extractCheckOrderJsonThenSendToBackend(originalPrompt);
+    }
+
+    private void extractCheckOrderJsonThenSendToBackend(String originalPrompt) {
+        String promptTemplate = ChatGeminiUtils.readFileFromAssets(this, R.raw.check_order_prompt);
+        String structuredPrompt = String.format(promptTemplate, originalPrompt);
+
+        Log.d("Generate summary prompt", structuredPrompt);
+
+        GeminiHelper.generateResponse(
+                structuredPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (jsonResponse, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("GeminiAPI", "Error generating JSON response", error);
+                            showLoading(false);
+                        } else if (jsonResponse != null) {
+                            Log.d("GeminiAPI", "JSON Response from Gemini: " + jsonResponse);
+                            userApiService.getMe(TokenManager.getToken(getApplicationContext())).enqueue(new retrofit2.Callback<UserResponse>() {
+                                @Override
+                                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                                    if (response.isSuccessful() && response.body() != null) {
+                                        sendToCheckOrderSpringBackend(response.body().getUserId() ,originalPrompt, "check_order");
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+
+                                }
+                            });
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE; // Explicitly return Unit to fix the lambda compatibility issue
+                }
+        );
+    }
+
+    private void sendToCheckOrderSpringBackend(int userId, String originalPrompt, String intentType) {
+        try {
+            Log.d("SpringBackend", "Sending GET request to backend to check orders for userId: " + userId);
+
+            // Configure OkHttpClient with timeouts
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build();
+
+            // Lấy endpoint và base URL
+            String endpoint = ChatGeminiUtils.getEndpointByIntent(intentType) + userId;
+            String baseUrl = ChatGeminiUtils.getBaseUrl();
+            String fullUrl = baseUrl + endpoint;
+
+            Log.d("SpringBackend", "Using " + (ChatGeminiUtils.isEmulator() ? "emulator" : "physical device") + " URL: " + fullUrl);
+
+            // Tạo GET request
+            Request request = new Request.Builder()
+                    .url(fullUrl)
+                    .get()
+                    .addHeader("Accept", "application/json")
+                    .build();
+
+            Log.d("SpringBackend", "Request URL: " + request.url());
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> {
+                        showLoading(false);
+                        Toast.makeText(ChatGeminiActivity.this, "Lỗi kết nối backend: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("SpringBackend", "Error connecting to backend", e);
+                        addMessageToChat("Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    handleCheckOrderBackendResponse(response, originalPrompt, intentType);
+                }
+            });
+
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                showLoading(false);
+                Toast.makeText(this, "Lỗi xử lý: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("SpringBackend", "Processing error", e);
+                addMessageToChat("Xin lỗi, đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
+            });
+        }
+    }
+
     private void handleSearchProduct(String originalPrompt) {
         showLoading(true);
         extractSearchJsonThenSendToBackend(originalPrompt);
@@ -546,7 +643,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                        handleBackendResponse(response, originalPrompt, intentType);
+                    handleSearchBackendResponse(response, originalPrompt, intentType);
                 }
             });
         } catch (Exception e) {
@@ -559,7 +656,74 @@ public class ChatGeminiActivity extends AppCompatActivity {
         }
     }
 
-    private void handleBackendResponse(Response response, String originalPrompt, String intentType) {
+    private void handleCheckOrderBackendResponse(Response response, String originalPrompt, String intentType) {
+        String springResponse = null;
+        try {
+            if (response.body() != null) {
+                springResponse = response.body().string();
+            }
+        } catch (IOException e) {
+            Log.e("SpringBackend", "Error reading response body", e);
+        }
+
+        final String finalResponse = springResponse;
+        runOnUiThread(() -> {
+            if (!response.isSuccessful()) {
+                handleServerError(response.code(), finalResponse);
+                return;
+            }
+
+            if (finalResponse == null) {
+                handleEmptyResponse();
+                return;
+            }
+
+            Log.d("SpringBackend", "Response from backend (" + intentType + "): " + finalResponse);
+            generateCheckOrderFinalResponse(originalPrompt, finalResponse, intentType);
+        });
+    }
+
+    private void generateCheckOrderFinalResponse(String originalPrompt, String backendData, String intentType) {
+        String systemContext = ChatGeminiUtils.getSystemContextForIntent(intentType);
+        String finalPrompt = systemContext +
+                " Câu hỏi gốc: \"" + originalPrompt + "\" " +
+                "Dữ liệu từ hệ thống: " + backendData +
+                " Hãy tạo câu trả lời tự nhiên và hữu ích.";
+
+        GeminiHelper.generateResponse(
+                finalPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (finalResponse, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            handleGenerationError("tạo phản hồi cuối cùng", error);
+                        } else if (finalResponse != null) {
+                            Log.d("GeminiAPI", "Final Response (" + intentType + "): " + finalResponse);
+                            saveMessage(finalResponse, SENDER.BOT.getValue());
+                            String token = TokenManager.getToken(this);
+                            userApiService.getMe(token).enqueue(new retrofit2.Callback<UserResponse>() {
+                                @Override
+                                public void onResponse(retrofit2.Call<UserResponse> call, retrofit2.Response<UserResponse> response) {
+                                    if (response.isSuccessful() && response.body() != null){
+                                        onBotResponseReceived(response.body().getChatSessionId());
+                                        Log.d("GeminiAPI at trigger onBotResponseReceived", "Bot response received" + response.body().getChatSessionId());
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(retrofit2.Call<UserResponse> call, Throwable t) {
+                                    Log.d("GeminiAPI error at trigger onBotResponseReceived", "Bot response received" + t.getMessage());
+                                }
+                            });
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE;
+                }
+        );
+    }
+
+    private void handleSearchBackendResponse(Response response, String originalPrompt, String intentType) {
         String springResponse = null;
         try {
             if (response.body() != null) {
