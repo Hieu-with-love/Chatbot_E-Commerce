@@ -80,3 +80,4 @@ INSERT INTO tbl_cart_item (id, cart_id, product_id, quantity) VALUES
                                                                   (8, 1, 8, 1),  -- 1 Jacket Cool
                                                                   (9, 1, 9, 2),  -- 2 Sneakers Run
                                                                   (10, 1, 10, 3); -- 3 Scarf Warm
+

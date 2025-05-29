@@ -35,8 +35,8 @@
                 android:src="@drawable/ic_user_placeholder"
                 android:background="@drawable/circle_white"
                 android:padding="4dp"
-                android:contentDescription="User Avatar" />            
-                
+                android:contentDescription="User Avatar" />
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -68,10 +68,11 @@
                 android:layout_height="28dp"
                 android:src="@drawable/ic_shopping_cart"
                 android:contentDescription="Cart"
-                app:tint="@android:color/white" />
-        </LinearLayout>    
-        
-        </com.google.android.material.card.MaterialCardView>    
+                app:tint="@android:color/white"
+                android:visibility="gone" /> <!-- Initially hidden -->
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Login Button -->
     <Button
@@ -83,7 +84,7 @@
         android:textSize="12sp"
         android:paddingHorizontal="16dp"
         android:background="@color/card_background_elevated"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/header_card"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/search_view"
@@ -104,11 +105,7 @@
         android:layout_marginBottom="12dp"
         android:layout_marginEnd="8dp" />
 
-    
-
     <!-- RecyclerView for products -->
-
-    <!-- Empty state TextView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_products"
         android:layout_width="0dp"
@@ -123,6 +120,7 @@
         app:layout_constraintVertical_bias="1.0"
         tools:listitem="@layout/product_item" />
 
+    <!-- Empty state TextView -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tv_empty_state"
         android:layout_width="0dp"
