@@ -22,4 +22,4 @@ Nếu câu hỏi có chứa các tiêu chí cụ thể (ví dụ: áo sơ mi nam
 
 Trả về **duy nhất một JSON object**, không kèm theo mô tả hoặc giải thích.
 
-Câu hỏi: "{{user_input}}"
+Câu hỏi: "%s"

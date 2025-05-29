@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.config.BuildConfig;
 import hcmute.edu.vn.chatbot_ec.model.Message;
 import retrofit2.Callback;
@@ -37,6 +38,21 @@ public class ChatGeminiUtils {
         }
 
         return result;
+    }
+
+    public static String structuredSummary(Context context, String originalPrompt, String summary, int raw){
+        String targetPrompt = originalPrompt;
+
+        if (summary!=null){
+            String promptTemplate = ChatGeminiUtils.readFileFromAssets(context, R.raw.summary_prompt);
+            String targetSummary = String.format(promptTemplate, originalPrompt + " and required before  " + summary);
+            Log.d("Summary not null", targetSummary);
+        }
+
+        String promptTemplateS = ChatGeminiUtils.readFileFromAssets(context, raw);
+        String structuredPrompt = String.format(promptTemplateS, targetPrompt);
+
+        return structuredPrompt;
     }
 
     public static String readFileFromAssets(Context context, int fileRaw) {
