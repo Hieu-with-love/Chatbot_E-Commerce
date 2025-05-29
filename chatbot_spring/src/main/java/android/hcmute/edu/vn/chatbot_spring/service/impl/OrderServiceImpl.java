@@ -1,17 +1,17 @@
 package android.hcmute.edu.vn.chatbot_spring.service.impl;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateOrderRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.PurchaseProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.UpdateOrderStatusRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.CartItemResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.CartResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderItemResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderResponse;
+import android.hcmute.edu.vn.chatbot_spring.enums.OrderStatus;
 import android.hcmute.edu.vn.chatbot_spring.exception.ConflictException;
 import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
-import android.hcmute.edu.vn.chatbot_spring.model.Order;
-import android.hcmute.edu.vn.chatbot_spring.model.OrderItem;
-import android.hcmute.edu.vn.chatbot_spring.model.Product;
-import android.hcmute.edu.vn.chatbot_spring.model.User;
+import android.hcmute.edu.vn.chatbot_spring.model.*;
+import android.hcmute.edu.vn.chatbot_spring.repository.AddressRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.OrderRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.ProductRepository;
 import android.hcmute.edu.vn.chatbot_spring.repository.UserRepository;
@@ -33,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final CartService cartService;
     private final ProductRepository productRepository;
+    private final AddressRepository addressRepository;
 
     @Transactional
     @Override
@@ -46,27 +47,33 @@ public class OrderServiceImpl implements OrderService {
         // Lấy thông tin người dùng
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-
-        // Tính tổng giá trị đơn hàng
-        BigDecimal totalPrice = cartResponse.getCartItems().stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Address address = addressRepository.findById(request.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy địa chỉ: " + request.getAddressId()));
+        if (!address.getUser().getId().equals(userId)) {
+            throw new ConflictException("Địa chỉ không thuộc về người dùng này");
+        }
 
         // Tạo đơn hàng mới
         Order order = Order.builder()
                 .user(user)
                 .orderDate(LocalDateTime.now())
-                .status("PENDING")
-                .shippingAddress(request.getShippingAddress())
-                .shippingPhone(request.getShippingPhone())
-                .totalPrice(totalPrice)
+                .status(OrderStatus.PENDING)
+                .recipientName(address.getRecipientName())
+                .shippingAddress(address.getFullAddress())
+                .shippingPhone(address.getPhone())
+                .totalPrice(BigDecimal.ZERO)
                 .orderItems(new ArrayList<>())
                 .build();
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
 
         // Chuyển các CartItem thành OrderItem
         for (CartItemResponse cartItem : cartResponse.getCartItems()) {
             Product product = productRepository.findById(cartItem.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + cartItem.getProductId()));
+            if (product.getStock() < cartItem.getQuantity()) {
+                throw new ConflictException("Không đủ tồn kho cho sản phẩm: " + product.getName());
+            }
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .product(product)
@@ -74,7 +81,12 @@ public class OrderServiceImpl implements OrderService {
                     .priceAtPurchase(cartItem.getPrice())
                     .build();
             order.getOrderItems().add(orderItem);
+            product.setStock(product.getStock() - cartItem.getQuantity());
+            productRepository.save(product);
+            totalPrice = totalPrice.add(cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         }
+
+        order.setTotalPrice(totalPrice);
 
         // Lưu đơn hàng
         order = orderRepository.save(order);
@@ -105,13 +117,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse updateOrderStatus(Integer orderId, UpdateOrderStatusRequest request) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
-
-        String newStatus = request.getStatus();
-        if (!isValidStatus(newStatus)) {
-            throw new ConflictException("Invalid status: " + newStatus);
-        }
-
-        order.setStatus(newStatus);
+        order.setStatus(request.getStatus());
         orderRepository.save(order);
         return convertToOrderResponse(order);
     }
@@ -122,16 +128,73 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        if (!order.getStatus().equals("PENDING")) {
+        if (!order.getStatus().equals(OrderStatus.PENDING)) {
             throw new ConflictException("Only PENDING orders can be canceled");
+        }
+
+        // Khôi phục tồn kho
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Product product = productRepository.findById(orderItem.getProduct().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm: " + orderItem.getProduct().getId()));
+            product.setStock(product.getStock() + orderItem.getQuantity());
+            productRepository.save(product);
         }
 
         orderRepository.delete(order);
     }
 
-    // Kiểm tra trạng thái hợp lệ
-    private boolean isValidStatus(String status) {
-        return List.of("PENDING", "SHIPPED", "DELIVERED", "CANCELED").contains(status);
+    @Transactional
+    @Override
+    public OrderResponse purchaseProduct(Integer userId, PurchaseProductRequest request) {
+        // Validate user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        // Validate address
+        Address address = addressRepository.findById(request.getAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy địa chỉ: " + request.getAddressId()));
+        if (!address.getUser().getId().equals(userId)) {
+            throw new ConflictException("Địa chỉ không thuộc về người dùng này");
+        }
+
+        // Validate product and stock
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + request.getProductId()));
+        if (product.getStock() < request.getQuantity()) {
+            throw new ConflictException("Không đủ tồn kho cho sản phẩm: " + product.getName());
+        }
+
+        Order order = Order.builder()
+                .user(user)
+                .orderDate(LocalDateTime.now())
+                .status(OrderStatus.PENDING)
+                .recipientName(address.getRecipientName())
+                .shippingAddress(address.getFullAddress())
+                .shippingPhone(address.getPhone())
+                .totalPrice(BigDecimal.ZERO)
+                .orderItems(new ArrayList<>())
+                .build();
+
+        OrderItem orderItem = OrderItem.builder()
+                .order(order)
+                .product(product)
+                .quantity(request.getQuantity())
+                .priceAtPurchase(product.getPrice())
+                .build();
+        order.getOrderItems().add(orderItem);
+
+        // Calculate total price
+        BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        order.setTotalPrice(totalPrice);
+
+        // Update product stock
+        product.setStock(product.getStock() - request.getQuantity());
+        productRepository.save(product);
+
+        // Save order
+        order = orderRepository.save(order);
+
+        return convertToOrderResponse(order);
     }
 
     // Chuyển đổi Order entity thành OrderResponse
@@ -141,6 +204,7 @@ public class OrderServiceImpl implements OrderService {
         orderResponse.setUserId(order.getUser().getId());
         orderResponse.setOrderDate(order.getOrderDate());
         orderResponse.setStatus(order.getStatus());
+        orderResponse.setRecipientName(order.getRecipientName());
         orderResponse.setShippingAddress(order.getShippingAddress());
         orderResponse.setShippingPhone(order.getShippingPhone());
         orderResponse.setTotalPrice(order.getTotalPrice());
@@ -157,6 +221,8 @@ public class OrderServiceImpl implements OrderService {
         orderItemResponse.setProductId(orderItem.getProduct().getId());
         orderItemResponse.setProductName(orderItem.getProduct().getName());
         orderItemResponse.setThumbnailUrl(orderItem.getProduct().getThumbnailUrl());
+        orderItemResponse.setSize(orderItem.getProduct().getSize());
+        orderItemResponse.setColor(orderItem.getProduct().getColor());
         orderItemResponse.setPriceAtPurchase(orderItem.getPriceAtPurchase());
         orderItemResponse.setQuantity(orderItem.getQuantity());
         return orderItemResponse;

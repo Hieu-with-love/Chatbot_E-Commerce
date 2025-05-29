@@ -5,6 +5,7 @@ import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.PageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductImageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductResponse;
+import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
 import android.hcmute.edu.vn.chatbot_spring.model.Category;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 import android.hcmute.edu.vn.chatbot_spring.model.ProductImage;
@@ -67,11 +68,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> searchProducts(ProductSearchRequest request) {
-        String name = request.getName() != null ? request.getName() : "";
+        String productName = request.getProductName() != null ? request.getProductName() : "";
         String categoryName = request.getCategoryName() != null ? request.getCategoryName() : "";
+        String description = request.getDescription() != null ? request.getDescription() : "";
         BigDecimal price = request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO;
 
-        return productRepository.findByCriteria(name, categoryName, price);
+        return productRepository.findByCriteria(productName, description, categoryName, price);
     }
 
     @Override
@@ -119,12 +121,42 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
+    @Override
+    public ProductResponse getProductById(int id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        return convert(product);
+    }
+
+    @Override
+    public PageResponse<ProductResponse> searchProductsByKeyword(int page, int size, String sort, String direction, String keyword) {
+        Pageable pageable = PaginationUtil.createPageable(page, size, sort, direction);
+
+        Page<Product> productPage;
+        if (keyword != null && !keyword.isEmpty()) {
+            productPage = productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            productPage = productRepository.findAll(pageable);
+        }
+
+        return PageResponse.<ProductResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(productPage.getTotalPages())
+                .totalElements(productPage.getTotalElements())
+                .content(productPage.getContent().stream().map(this::convert).toList())
+                .build();
+    }
+
     private ProductResponse convert(Product product) {
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
                 .price(product.getPrice())
+                .stock(product.getStock())
+                .color(product.getColor())
+                .size(product.getSize())
                 .thumbnailUrl(product.getThumbnailUrl())
                 .productImages(product.getProductImages().stream()
                         .map(this::convertProductImage)

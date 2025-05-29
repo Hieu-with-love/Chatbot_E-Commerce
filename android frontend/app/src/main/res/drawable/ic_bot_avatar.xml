@@ -1,0 +1,61 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#E8F4FD"
+        android:pathData="M256,40C375.35,40 472,136.65 472,256C472,375.35 375.35,472 256,472C136.65,472 40,375.35 40,256C40,136.65 136.65,40 256,40Z"/>
+
+    <!-- Left antenna -->
+    <path
+        android:fillColor="#1E3A8A"
+        android:pathData="M160,80C160,71.16 167.16,64 176,64C184.84,64 192,71.16 192,80L192,140C192,157.67 177.67,172 160,172C142.33,172 128,157.67 128,140L128,120C128,97.91 145.91,80 168,80L160,80Z"/>
+
+    <!-- Right antenna -->
+    <path
+        android:fillColor="#1E3A8A"
+        android:pathData="M352,80C360.84,80 368,71.16 368,80C368,88.84 360.84,96 352,96L344,96C321.91,96 304,113.91 304,136L304,156C304,173.67 318.33,188 336,188C353.67,188 368,173.67 368,156L368,96C368,87.16 375.16,80 384,80C392.84,80 400,87.16 400,96L400,156C400,190.48 372.48,218 338,218C303.52,218 276,190.48 276,156L276,136C276,96.24 308.24,64 348,64L352,80Z"/>
+
+    <!-- Main robot body -->
+    <path
+        android:fillColor="#C7D2FE"
+        android:pathData="M140,160L372,160C420.8,160 460,199.2 460,248L460,300C460,348.8 420.8,388 372,388L300,388L300,420C300,448.71 276.71,472 248,472L228,472C199.29,472 176,448.71 176,420C176,391.29 199.29,368 228,368L268,368L268,356L140,356C91.2,356 52,316.8 52,268L52,248C52,199.2 91.2,160 140,160Z"/>
+
+    <!-- Inner robot head/face area -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M180,200L332,200C358.51,200 380,221.49 380,248L380,280C380,306.51 358.51,328 332,328L180,328C153.49,328 132,306.51 132,280L132,248C132,221.49 153.49,200 180,200Z"/>    <!-- Left eye -->
+    <path
+        android:fillColor="#60A5FA"
+        android:pathData="M220,240C234,240 234,288 220,288C206,288 206,240 220,240Z"/>
+
+    <!-- Right eye -->
+    <path
+        android:fillColor="#A78BFA"
+        android:pathData="M292,240C306,240 306,288 292,288C278,288 278,240 292,240Z"/>
+
+    <!-- Left headphone ear piece -->
+    <path
+        android:fillColor="#60A5FA"
+        android:pathData="M52,220L100,220C122.09,220 140,237.91 140,260L140,280C140,302.09 122.09,320 100,320L70,320C48.91,320 30,301.09 30,280L30,250C30,233.43 43.43,220 60,220L52,220Z"/>
+
+    <!-- Right headphone ear piece -->
+    <path
+        android:fillColor="#8B5CF6"
+        android:pathData="M412,220L460,220C477.67,220 492,234.33 492,252L492,280C492,302.09 474.09,320 452,320L412,320C389.91,320 372,302.09 372,280L372,260C372,237.91 389.91,220 412,220Z"/>    <!-- Microphone -->
+    <path
+        android:fillColor="#1E3A8A"
+        android:pathData="M320,406C336,406 352,414 352,430C352,446 336,454 320,454C304,454 288,446 288,430C288,414 304,406 320,406Z"/>
+
+    <!-- Microphone arm/connection -->
+    <path
+        android:fillColor="#1E40AF"
+        android:strokeColor="#1E40AF"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:pathData="M268,380L268,400L350,400C361.05,400 370,408.95 370,420C370,431.05 361.05,440 350,440L320,440"/>
+
+</vector>

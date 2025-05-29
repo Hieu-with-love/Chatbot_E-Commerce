@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@color/card_background_elevated"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@color/divider"
+    app:strokeWidth="1dp"
+    app:rippleColor="@color/accent_dark"
+    app:cardPreventCornerOverlap="false">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_order_date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/order_date_format"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_order_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/order_status_format"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            app:layout_constraintTop_toBottomOf="@id/text_order_date"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_recipient_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/recipient_name_format"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            app:layout_constraintTop_toBottomOf="@id/text_order_status"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_shipping_address"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/shipping_address_format"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            app:layout_constraintTop_toBottomOf="@id/text_recipient_name"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_shipping_phone"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/shipping_phone_format"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            app:layout_constraintTop_toBottomOf="@id/text_shipping_address"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_total_price"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/total_price_format"
+            android:textSize="14sp"
+            android:textColor="@color/error"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/text_shipping_phone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_order_items"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/text_total_price"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="12dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

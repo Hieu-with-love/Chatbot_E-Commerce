@@ -27,6 +27,15 @@ public class Product {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Column(name = "stock", nullable = false)
+    private Integer stock;
+
+    @Column(name = "size", nullable = false)
+    private String size;
+
+    @Column(name = "color", nullable = false)
+    private String color;
+
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 

@@ -1,5 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.model;
 
+import android.hcmute.edu.vn.chatbot_spring.enums.PaymentMethod;
+import android.hcmute.edu.vn.chatbot_spring.enums.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,13 +27,15 @@ public class Payment {
     private BigDecimal amount;
 
     @Column(name = "payment_status", nullable = false)
-    private String paymentStatus;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
     @Column(name = "payment_method")
-    private String paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", referencedColumnName = "id")

@@ -1,6 +1,7 @@
 package android.hcmute.edu.vn.chatbot_spring.controller;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateOrderRequest;
+import android.hcmute.edu.vn.chatbot_spring.dto.request.PurchaseProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.UpdateOrderStatusRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderResponse;
 import android.hcmute.edu.vn.chatbot_spring.service.OrderService;
@@ -22,6 +23,14 @@ public class OrderController {
     public ResponseEntity<OrderResponse> createOrder(@PathVariable Integer userId,
                                                     @RequestBody CreateOrderRequest request) {
         OrderResponse orderResponse = orderService.createOrder(userId, request);
+        return ResponseEntity.ok(orderResponse);
+    }
+
+    // Mua sản phẩm trực tiếp
+    @PostMapping("/purchase/{userId}")
+    public ResponseEntity<OrderResponse> purchaseProduct(@PathVariable Integer userId,
+                                                         @RequestBody PurchaseProductRequest request) {
+        OrderResponse orderResponse = orderService.purchaseProduct(userId, request);
         return ResponseEntity.ok(orderResponse);
     }
 

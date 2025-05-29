@@ -1,9 +1,20 @@
 package hcmute.edu.vn.chatbot_ec.response;
 
-public class ResponseData {
+import com.google.gson.annotations.SerializedName;
+
+/**
+ * Generic response wrapper for all API responses
+ * @param <T> Type of data contained in the response
+ */
+public class ResponseData<T> {
+    @SerializedName("status")
     private int status;
+    
+    @SerializedName("message")
     private String message;
-    private Object data;
+    
+    @SerializedName("data")
+    private T data;
 
     public int getStatus() {
         return status;
@@ -21,11 +32,11 @@ public class ResponseData {
         this.message = message;
     }
 
-    public Object getData() {
+    public T getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(T data) {
         this.data = data;
     }
 }

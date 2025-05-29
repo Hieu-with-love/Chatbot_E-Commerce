@@ -16,22 +16,13 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "country")
-    private String country;
+    @Column(name = "recipient_name", nullable = false)
+    private String recipientName;
 
-    @Column(name = "city")
-    private String city;
+    @Column(name = "full_address", nullable = false)
+    private String fullAddress;
 
-    @Column(name = "address_line")
-    private String addressLine;
-
-    @Column(name = "postal_code")
-    private String postalCode;
-
-    @Column(name = "fullName")
-    private String fullName;
-
-    @Column(name = "phone")
+    @Column(name = "phone", nullable = false)
     private String phone;
 
     @ManyToOne(fetch = FetchType.LAZY)

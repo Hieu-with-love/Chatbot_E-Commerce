@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/background_light">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chọn địa chỉ giao hàng"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="16dp" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_empty_addresses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Chưa có địa chỉ nào"
+        android:textSize="16sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_addresses"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="300dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_add_address"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="Thêm địa chỉ mới"
+        android:textAllCaps="false"
+        android:textSize="14sp"
+        android:textColor="@android:color/white"
+        app:backgroundTint="@color/button_secondary_background"
+        app:cornerRadius="12dp" />
+
+</LinearLayout>

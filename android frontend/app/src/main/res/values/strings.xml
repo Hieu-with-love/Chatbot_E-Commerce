@@ -1,7 +1,6 @@
-<resources>
-    <string name="app_name">E-Commerce integrated chatbot</string>
-    <string name="splash_title">Your Shopping Destination</string>
-    <string name="splash_subtitle">for Everything</string>
+<resources>    <string name="app_name">ShopSmart - E-Commerce Assistant</string>
+    <string name="splash_title">ShopSmart</string>
+    <string name="splash_subtitle">Your AI-powered shopping companion for the best deals</string>
     <string name="app_logo">App Logo</string>
     <string name="lets_get_started">Let\'s Get Started</string>
     <string name="already_have_account_question">Already have an account?</string>
@@ -16,9 +15,9 @@
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="log_in">Log in</string>
-
-    <!-- Login strings -->
+    <string name="back">Back To Starter</string>    <!-- Login strings -->
     <string name="dont_have_account_question">Don\'t have an account?</string>
+    <string name="forgot_password">Forgot Password?</string>
     <string name="login_success">Login Successful</string>
     <string name="welcome_back">Welcome Back!</string>
 
@@ -29,4 +28,88 @@
     <string name="generic_error_message">An unexpected error occurred. Please try again later.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="profile_title">Hồ sơ người dùng</string>
+    <string name="email_label">Email: %s</string>
+    <string name="phone_label">Điện thoại: %s</string>
+    <string name="avatar_description">Ảnh đại diện của %s</string>
+    <string name="verified">Đã xác minh</string>
+    <string name="unverified">Chưa xác minh</string>
+    <string name="edit_profile">Chỉnh sửa thông tin</string>
+    <string name="address_label">Địa chỉ giao hàng</string>
+    <string name="order_history_label">Lịch sử mua hàng</string>
+
+    <!-- orders strings -->
+    <string name="order_history_title">Lịch sử đơn hàng</string>
+    <string name="no_orders">Chưa có đơn hàng nào</string>
+    <string name="please_login">Vui lòng đăng nhập để xem đơn hàng</string>
+    <string name="error_user_info">Không thể lấy thông tin người dùng</string>
+    <string name="error_load_orders">Không thể tải danh sách đơn hàng</string>
+    <string name="connection_error">Lỗi kết nối</string>
+    <string name="connection_error_message">Lỗi kết nối: %s</string>
+    <string name="order_date_format">Ngày đặt: %s</string>
+    <string name="order_status_format">Trạng thái: %s</string>
+    <string name="shipping_address_format">Địa chỉ: %s</string>
+    <string name="shipping_phone_format">SĐT: %s</string>
+    <string name="total_price_format">Tổng: %s VNĐ</string>
+    <string name="quantity_format">x%s</string>
+    <string name="price_format">%s VNĐ</string>
+    <string name="product_image_description">Hình ảnh của %s</string>
+    <string name="order_description">Đơn hàng số %d</string>
+    <string name="orders_list_description">Danh sách đơn hàng của bạn</string>
+    <string name="recipient_name_format">Người nhận: %1$s</string>
+    <string name="color_format">Màu: %1$s</string>
+    <string name="size_format">Size: %1$s</string>
+
+    <!-- address strings -->
+    <string name="toolbar_title_addresses">Danh sách địa chỉ</string>
+    <string name="title_add_edit_address">Địa chỉ</string>
+    <string name="text_empty_addresses">Chưa có địa chỉ nào</string>
+    <string name="hint_recipient_name">Tên người nhận</string>
+    <string name="hint_full_address">Địa chỉ đầy đủ</string>
+    <string name="hint_phone">Số điện thoại</string>
+    <string name="button_save">Lưu</string>
+    <string name="button_cancel">Hủy</string>
+    <string name="button_edit">Sửa</string>
+    <string name="button_delete">Xóa</string>
+    <string name="error_recipient_name_required">Tên người nhận là bắt buộc</string>
+    <string name="error_address_required">Địa chỉ là bắt buộc</string>
+    <string name="error_phone_required">Số điện thoại là bắt buộc</string>
+    <string name="error_phone_invalid">Số điện thoại không hợp lệ</string>
+    <string name="message_addresses_loaded">Đã tải danh sách địa chỉ</string>
+    <string name="message_address_added">Đã thêm địa chỉ</string>
+    <string name="message_address_updated">Đã cập nhật địa chỉ</string>
+    <string name="message_address_deleted">Đã xóa địa chỉ</string>
+    <string name="error_load_addresses_failed">Không tải được danh sách địa chỉ</string>
+    <string name="error_add_address_failed">Không thêm được địa chỉ</string>
+    <string name="error_update_address_failed">Không cập nhật được địa chỉ</string>
+    <string name="error_delete_address_failed">Không xóa được địa chỉ</string>
+    <string name="error_network">Lỗi mạng: %1$s</string>
+
+    <!--product strings-->
+    <string name="greeting">Chào bạn,</string>
+    <string name="guest">Khách</string>
+    <string name="search_hint">Tìm kiếm sản phẩm...</string>
+    <string name="empty_products">Không tìm thấy sản phẩm</string>
+    <string name="fetch_products_failed">Không thể tải sản phẩm</string>
+    <string name="login_required">Vui lòng đăng nhập</string>
+    <string name="network_error_retry">Không thể tải sản phẩm. Bạn có muốn thử lại không?</string>
+
+    <!--chatbot strings-->
+    <string name="menu_generate_summary">Generate Chat Summary</string>
+    <string name="summary_generated">Chat summary generated successfully</string>
+    <string name="summary_failed">Failed to generate chat summary</string>
+    <string name="summary_no_messages">No conversation to summarize</string>
+
+    
+    <!-- Authentication and Logout strings -->
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="logout_success">Đã đăng xuất thành công</string>
+    <string name="token_expired">Phiên đăng nhập đã hết hạn</string>
+    <string name="session_expired">Phiên làm việc đã hết hạn, vui lòng đăng nhập lại</string>
+    <string name="authentication_required">Vui lòng đăng nhập để tiếp tục</string>
+    <string name="token_refresh_failed">Không thể làm mới phiên đăng nhập</string>
+
 </resources>

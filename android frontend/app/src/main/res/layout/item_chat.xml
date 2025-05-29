@@ -2,32 +2,102 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
-
-    <!-- User Message (right aligned) -->
-    <TextView
-        android:id="@+id/textView_user_message"
+    android:padding="8dp">    <!-- User Message Container (right aligned) -->
+    <RelativeLayout
+        android:id="@+id/layout_user_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_marginStart="80dp"
-        android:background="@drawable/user_message_background"
-        android:padding="12dp"
-        android:textColor="@color/text_primary"
-        android:textSize="16sp"
-        android:visibility="gone" />
+        android:visibility="gone">
 
-    <!-- Bot Message (left aligned) -->
-    <TextView
-        android:id="@+id/textView_bot_message"
+        <!-- User Avatar -->
+        <ImageView
+            android:id="@+id/imageView_user_avatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_user_avatar"
+            android:background="@drawable/circle_background"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="User Avatar" />
+
+        <TextView
+            android:id="@+id/textView_user_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/user_message_background"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textAlignment="textEnd"
+            android:layout_toStartOf="@id/imageView_user_avatar"
+            android:layout_marginEnd="8dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textView_user_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textView_user_message"
+            android:layout_alignParentEnd="true"
+            android:textAlignment="textEnd"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="4dp"
+            android:text="You"
+            android:textColor="@color/user_message_text"
+            android:textSize="10sp"
+            android:textStyle="italic" />
+
+    </RelativeLayout>
+
+    <!-- Bot Message Container (left aligned) -->
+    <RelativeLayout
+        android:id="@+id/layout_bot_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_marginEnd="80dp"
-        android:background="@drawable/bot_message_background"
-        android:padding="12dp"
-        android:textColor="@color/text_primary"
-        android:textSize="16sp"
-        android:visibility="gone" />
+        android:visibility="gone">
+        
+        <!-- Bot Avatar -->
+        <ImageView
+            android:id="@+id/imageView_bot_avatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_bot_avatar"
+            android:background="@drawable/circle_background"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Bot Avatar" />
+
+        <TextView
+            android:id="@+id/textView_bot_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bot_message_background"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:layout_toEndOf="@id/imageView_bot_avatar"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textView_bot_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textView_bot_message"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="4dp"
+            android:text="Bot"
+            android:textColor="@color/bot_message_text"
+            android:textSize="10sp"
+            android:textStyle="italic" />
+
+    </RelativeLayout>
 
 </RelativeLayout>

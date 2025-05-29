@@ -51,11 +51,29 @@
     <color name="warning">#FFA000</color> <!-- Vàng cam cho cảnh báo -->
     <color name="info">#0288D1</color> <!-- Xanh dương cho thông tin -->
     <color name="verified">#196600</color>
-    <color name="unverified">#5F0000</color>
-
-    <!-- Màu cho chế độ tối -->
+    <color name="unverified">#5F0000</color>    <!-- Màu cho chế độ tối -->
     <color name="dark_mode_background">#121212</color> <!-- Đen nhạt cho nền tối -->
     <color name="dark_mode_surface">#1E1E1E</color> <!-- Xám đen cho bề mặt tối -->
     <color name="dark_mode_text_primary">#E0E0E0</color> <!-- Xám nhạt cho chữ chính tối -->
     <color name="dark_mode_text_secondary">#B0BEC5</color> <!-- Xám xanh nhạt cho chữ phụ tối -->
+
+    <!-- Alternative color scheme (you can choose) -->
+    <!-- User Message Colors - Alternative -->
+    <color name="user_message_bg">#DCF8C6</color>
+    <color name="user_message_text">#075E54</color>
+    <color name="user_timestamp_text">#128C7E</color>
+    <color name="user_avatar_bg">#25D366</color>
+
+    <!-- Bot Message Colors - Alternative -->
+    <color name="bot_message_bg">#FFFFFF</color>
+    <color name="bot_message_text">#303030</color>
+    <color name="bot_timestamp_text">#999999</color>
+    <color name="bot_avatar_bg">#FF6B35</color>
+
+    <!-- Error and Logout button colors -->
+    <color name="error_background">#FFEBEE</color> <!-- Light red background for error buttons -->
+    <color name="error_background_pressed">#FFCDD2</color> <!-- Darker red when pressed -->
+    <color name="error_text">#D32F2F</color> <!-- Red text for error states -->
+    <color name="error_border">#F44336</color> <!-- Red border for error elements -->
+
 </resources>

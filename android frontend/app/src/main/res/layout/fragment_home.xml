@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.HomeFragment">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/background_soft"
+    android:padding="16dp">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/layout_product_list"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@android:color/white">
+    <!-- Header with gradient background -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/header_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@null"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="6dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:background="@drawable/bg_hero"
-            android:layout_marginBottom="8dp"
-            android:weightSum="1">
+            android:background="@color/accent"
+            android:padding="16dp">
 
             <ImageView
                 android:id="@+id/img_user_avatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/ic_user_placeholder"
                 android:background="@drawable/circle_white"
                 android:padding="4dp"
@@ -35,76 +40,111 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.8"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:layout_marginStart="12dp">
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tv_greeting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chào bạn,"
+                    android:text="@string/greeting"
                     android:textColor="@android:color/white"
                     android:textSize="14sp" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tv_full_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nguyễn Văn A"
+                    android:text="@string/guest"
                     android:textColor="@android:color/white"
-                    android:textSize="16sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <ImageView
                 android:id="@+id/img_cart"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="end|center_vertical"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:src="@drawable/ic_shopping_cart"
                 android:contentDescription="Cart"
-                app:tint="@android:color/white" />
+                app:tint="@android:color/white"
+                android:visibility="gone" /> <!-- Initially hidden -->
         </LinearLayout>
 
+    </com.google.android.material.card.MaterialCardView>
 
+    <!-- Login Button -->
+    <Button
+        android:id="@+id/btn_login"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:text="Đăng nhập"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:paddingHorizontal="16dp"
+        android:background="@color/card_background_elevated"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/header_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/search_view"
+        android:layout_marginTop="12dp" />
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/search_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:queryHint="Search products..."
-            android:iconifiedByDefault="false"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_search_view" />
+    <!-- SearchView -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/search_view"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:queryHint="@string/search_hint"
+        android:iconifiedByDefault="false"
+        android:background="@drawable/bg_search_view"
+        app:layout_constraintTop_toBottomOf="@id/header_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_login"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:layout_marginEnd="8dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_products"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:padding="8dp"
-            tools:listitem="@layout/product_item" />
+    <!-- RecyclerView for products -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_products"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_view"
+        app:layout_constraintVertical_bias="1.0"
+        tools:listitem="@layout/product_item" />
 
-        <TextView
-            android:id="@+id/tv_empty_state"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No products found"
-            android:textAlignment="center"
-            android:textColor="@android:color/darker_gray"
-            android:visibility="gone"
-            android:padding="16dp"
-            android:textSize="16sp" />
+    <!-- Empty state TextView -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_empty_state"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/empty_products"
+        android:textAlignment="center"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/search_view"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-    </LinearLayout>
+    <!-- ProgressBar -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
