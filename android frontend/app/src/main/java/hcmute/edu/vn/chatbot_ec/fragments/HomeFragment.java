@@ -1,26 +1,17 @@
 package hcmute.edu.vn.chatbot_ec.fragments;
 
-import static java.security.AccessController.getContext;
-
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.core.content.ContextCompat;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -29,47 +20,40 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.card.MaterialCardView;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import hcmute.edu.vn.chatbot_ec.R;
+import hcmute.edu.vn.chatbot_ec.activity.Login; // Assuming LoginActivity exists
 import hcmute.edu.vn.chatbot_ec.activity.ProductDetailActivity;
-import hcmute.edu.vn.chatbot_ec.activity.Login;
 import hcmute.edu.vn.chatbot_ec.adapter.ProductAdapter;
-
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
-import hcmute.edu.vn.chatbot_ec.network.UserApiService;
-import hcmute.edu.vn.chatbot_ec.response.UserDetailResponse;
-import hcmute.edu.vn.chatbot_ec.service.AuthenticationService;
-import hcmute.edu.vn.chatbot_ec.utils.AuthUtils;
-import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
-import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 import hcmute.edu.vn.chatbot_ec.network.CartApiService;
 import hcmute.edu.vn.chatbot_ec.network.ProductApiService;
+import hcmute.edu.vn.chatbot_ec.network.UserApiService;
 import hcmute.edu.vn.chatbot_ec.request.AddCartItemRequest;
 import hcmute.edu.vn.chatbot_ec.response.CartResponse;
 import hcmute.edu.vn.chatbot_ec.response.PageResponse;
-import hcmute.edu.vn.chatbot_ec.response.ProductImageResponse;
 import hcmute.edu.vn.chatbot_ec.response.ProductResponse;
-import hcmute.edu.vn.chatbot_ec.utils.JwtUtils;
+import hcmute.edu.vn.chatbot_ec.response.UserResponse;
+import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvProducts;
     private ProgressBar progressBar;
     private TextView tvEmptyState, tvGreeting, tvFullName;
     private ImageView imgCart, imgUserAvatar;
+    private Button btnLogin; // Added login button
     private SearchView searchView;
     private ProductAdapter adapter;
     private List<ProductResponse> products = new ArrayList<>();
     private ProductApiService productApiService;
     private CartApiService cartApiService;
-    private MaterialCardView headerCard;
     private Integer userId;
     private int currentPage = 1;
     private int pageSize = 10;
@@ -82,21 +66,6 @@ public class HomeFragment extends Fragment {
     private Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable loadMoreRunnable;
     private Runnable searchRunnable;
-    private Button btnLogin;
-    private boolean isUserAuthenticated = false;
-    private ConstraintLayout constraintLayout;
-
-    private static String TAG = "HomeFragment";
-      // Broadcast receiver for logout events
-    private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (AuthenticationService.ACTION_USER_LOGOUT.equals(intent.getAction())) {
-                Log.d(TAG, "Logout broadcast received");
-                handleLogoutBroadcast();
-            }
-        }
-    };
 
     public HomeFragment() {
     }
@@ -104,292 +73,21 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-        
-        initViews(view);
-        
-        // Get authentication state from arguments
-        if (getArguments() != null) {
-            isUserAuthenticated = getArguments().getBoolean("user_authenticated", false);
-        }
-        
-        setupTopBar();
-        setupProductList(view);
-        
-        return view;
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (getContext() != null) {
-            IntentFilter filter = new IntentFilter(AuthenticationService.ACTION_USER_LOGOUT);
-            ContextCompat.registerReceiver(getContext(), logoutReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
-        }
-    }
-    
-    @Override
-    public void onStop() {
-        super.onStop();
-        // Unregister broadcast receiver
-        if (getContext() != null) {
-            try {
-                getContext().unregisterReceiver(logoutReceiver);
-            } catch (IllegalArgumentException e) {
-                // Receiver was not registered
-                Log.d(TAG, "Receiver was not registered");
-            }
-        }
-    }
-
-    private void initViews(View view) {
-        rvProducts = view.findViewById(R.id.rv_products);
-        imgUserAvatar = view.findViewById(R.id.img_user_avatar);
-        imgCart = view.findViewById(R.id.img_cart);
-        tvGreeting = view.findViewById(R.id.tv_greeting);
-        tvFullName = view.findViewById(R.id.tv_full_name);
-        btnLogin = view.findViewById(R.id.btn_login);
-        headerCard = view.findViewById(R.id.header_card);
-
-        
-        // Setup login button click listener
-        btnLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), Login.class);
-            startActivity(intent);
-        });
-
-    }    
-  
-  private void setupTopBar() {
-        if (getContext() == null) {
-            return;
-        }
-          // Debug authentication state (remove in production)
-        debugSessionInfo();
-        debugJWTTokenInfo();
-        
-        // Check if user is authenticated
-        if (!AuthUtils.isAuthenticated(getContext())) {
-            Log.d(TAG, "No valid token found, showing guest mode");
-            showGuestMode();
-            return;
-        }
-        
-        Log.d(TAG, "Valid token found, loading user profile");
-        loadUserProfile();
-        
-        // Check if token is expiring soon and show warning
-        if (AuthUtils.isTokenExpiringSoon(getContext())) {
-            Log.w(TAG, "Token expiring soon - user should refresh session");
-        }
-  }
-
-    private void loadUserProfile() {
-        // Get JWT token from TokenManager
-        String token = TokenManager.getToken(getContext());
-        
-        if (token != null && !JwtUtils.isTokenExpired(token)) {
-            // Extract user info from JWT token
-            String fullName = JwtUtils.getFullNameFromToken(token);
-            String role = JwtUtils.getRoleFromToken(token);
-            String userId = JwtUtils.getUserIdFromToken(token);
-            
-            if (fullName != null && !fullName.trim().isEmpty()) {
-                Log.d(TAG, "Displaying user info from JWT token: " + fullName);
-                displayUserInfoFromJWT(token);
-                return;
-            }
-        }
-
-        // If no valid token or user info, user might not be logged in
-        Log.w(TAG, "No valid token or user info found, switching to guest mode");
-        showGuestMode();
-    }
-
-    private void fetchUserDetails(Integer userId) {
-        if (userId == null || getContext() == null) {
-            showGuestMode();
-            return;
-        }
-
-        UserApiService userApiService = ApiClient.getUserApiService();
-        userApiService.getUserById(userId).enqueue(new Callback<UserDetailResponse>() {
-            @Override
-            public void onResponse(Call<UserDetailResponse> call, Response<UserDetailResponse> response) {
-                if (getActivity() == null) return; // Fragment might be detached
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    UserDetailResponse userDetail = response.body();
-                    displayUserInfo(userDetail);
-                } else if (response.code() == 401) {
-                    // Handle unauthorized response
-                    Log.w(TAG, "Unauthorized response - token may be expired");
-                    AuthUtils.handleUnauthorizedResponse(getContext());                } else {
-                    Log.w(TAG, "Failed to load user details: " + response.code());
-                    // If we have JWT token, fallback to displaying that
-                    String token = TokenManager.getToken(getContext());
-                    if (token != null && !JwtUtils.isTokenExpired(token)) {
-                        displayUserInfoFromJWT(token);
-                    } else {
-                        showGuestMode();
-                    }
-                }
-            }            @Override
-            public void onFailure(Call<UserDetailResponse> call, Throwable t) {
-                Log.e(TAG, "Network error loading user details", t);
-                if (getActivity() != null) {
-                    // Fallback to JWT token data if available
-                    String token = TokenManager.getToken(getContext());
-                    if (token != null && !JwtUtils.isTokenExpired(token)) {
-                        displayUserInfoFromJWT(token);
-                    } else {
-                        showGuestMode();
-                    }
-                }
-            }
-        });
-    }    
-
-private void displayUserInfo(UserDetailResponse user) {
-        Log.d(TAG, "Displaying user info for: " + user.getFullName());
-        
-        // Show user avatar and name, hide login button
-        imgUserAvatar.setVisibility(View.VISIBLE);
-        tvGreeting.setText("Chào bạn,");
-        tvFullName.setText(user.getFullName());
-        tvFullName.setVisibility(View.VISIBLE);
-        btnLogin.setVisibility(View.GONE);
-        
-        // Show cart icon when user is authenticated
-        if (imgCart != null) {
-            imgCart.setVisibility(View.VISIBLE);
-        }
-        
-        // Update SearchView constraints when login button is hidden
-        updateSearchViewConstraints(false);
-        
-        // TODO: Load user avatar from URL if available
-        // For now, keep the default placeholder
-    }    /**
-     * Display user information with customizable greeting
-     * @param fullName User's full name
-     * @param role User's role (optional)
-     * @param userId User's ID for cart functionality (optional)
-     */
-    private void displayUserInfoFromToken(String fullName, String role, String userId) {
-        Log.d(TAG, "Displaying user info for: " + fullName + ", Role: " + role + ", ID: " + userId);
-        
-        // Show user avatar and name, hide login button
-        imgUserAvatar.setVisibility(View.VISIBLE);
-        
-        // Customize greeting based on role
-        String greeting = "Chào bạn,";
-        if (role != null && !role.trim().isEmpty()) {
-            if (role.equalsIgnoreCase("ADMIN")) {
-                greeting = "Chào Admin,";
-            } else if (role.equalsIgnoreCase("MANAGER")) {
-                greeting = "Chào Quản lý,";
-            } else if (role.equalsIgnoreCase("VIP")) {
-                greeting = "Chào thành viên VIP,";
-            }
-        }
-        
-        tvGreeting.setText(greeting);
-        tvFullName.setText(fullName != null ? fullName : "User");
-        tvFullName.setVisibility(View.VISIBLE);
-        btnLogin.setVisibility(View.GONE);
-        
-        // Show cart icon when user is authenticated
-        if (imgCart != null) {
-            imgCart.setVisibility(View.VISIBLE);
-        }
-        
-        // Update SearchView constraints when login button is hidden
-        updateSearchViewConstraints(false);
-        
-        // Set userId for cart functionality
-        if (userId != null) {
-            try {
-                this.userId = Integer.parseInt(userId);
-            } catch (NumberFormatException e) {
-                Log.w(TAG, "Cannot parse user ID: " + userId);
-            }
-        }
-    }
-      /**
-     * Display user information extracted from JWT token
-     * @param token JWT token containing user information
-     */
-    private void displayUserInfoFromJWT(String token) {
-        if (token == null || JwtUtils.isTokenExpired(token)) {
-            Log.w(TAG, "Cannot display user info: token is null or expired");
-            showGuestMode();
-            return;
-        }
-        
-        String fullName = JwtUtils.getFullNameFromToken(token);
-        String role = JwtUtils.getRoleFromToken(token);
-        String userId = JwtUtils.getUserIdFromToken(token);
-        
-        Log.d(TAG, "Displaying user info from JWT for: " + fullName + ", Role: " + role + ", ID: " + userId);
-        
-        // Use the generic display method
-        displayUserInfoFromToken(fullName, role, userId);
-    }
-      private void showGuestMode() {
-        Log.d(TAG, "Showing guest mode UI");
-
-        headerCard.setVisibility(View.GONE);
-        btnLogin.setVisibility(View.VISIBLE);
-        
-        // Hide cart icon when user is not authenticated
-        if (imgCart != null) {
-            imgCart.setVisibility(View.GONE);
-        }
-          // Clear user ID since user is not authenticated
-        userId = null;
-        
-        // Update SearchView constraints to reference login button
-        updateSearchViewConstraints(true);
-    }
-    
-    /**
-     * Update SearchView constraints based on login button visibility
-     * @param loginVisible true if login button is visible, false otherwise
-     */
-    private void updateSearchViewConstraints(boolean loginVisible) {
-        if (constraintLayout == null || searchView == null) {
-            return;
-        }
-        
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(constraintLayout);
-        
-        if (loginVisible) {
-            // When login button is visible, SearchView should constrain to its start
-            constraintSet.connect(R.id.search_view, ConstraintSet.TOP, 
-                                R.id.btn_login, ConstraintSet.TOP, 0);
-            constraintSet.connect(R.id.search_view, ConstraintSet.BOTTOM, 
-                                R.id.btn_login, ConstraintSet.BOTTOM, 0);
-        } else {
-            // When login button is hidden, SearchView should constrain below header_card
-            constraintSet.connect(R.id.search_view, ConstraintSet.TOP, 
-                                R.id.header_card, ConstraintSet.BOTTOM, 
-                                getResources().getDimensionPixelSize(R.dimen.margin_medium));
-            constraintSet.clear(R.id.search_view, ConstraintSet.BOTTOM);
-        }
-        
-        constraintSet.applyTo(constraintLayout);
-    }
-    private void setupProductList(View view) {        // Initialize UI components
+        // Initialize UI components
         rvProducts = view.findViewById(R.id.rv_products);
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmptyState = view.findViewById(R.id.tv_empty_state);
+        tvGreeting = view.findViewById(R.id.tv_greeting);
+        tvFullName = view.findViewById(R.id.tv_full_name);
+        imgCart = view.findViewById(R.id.img_cart);
+        btnLogin = view.findViewById(R.id.btn_login);
+        imgUserAvatar = view.findViewById(R.id.img_user_avatar);
         searchView = view.findViewById(R.id.search_view);
         productApiService = ApiClient.getProductApiService();
         cartApiService = ApiClient.getCartApiService();
 
         // Set up RecyclerView with GridLayoutManager
-
         rvProducts.setLayoutManager(new GridLayoutManager(getContext(), 2));
         adapter = new ProductAdapter(products, new ProductAdapter.OnProductClickListener() {
             @Override
@@ -421,6 +119,12 @@ private void displayUserInfo(UserDetailResponse user) {
                     .replace(R.id.fragment_container, new CartFragment())
                     .addToBackStack(null)
                     .commit();
+        });
+
+        // Handle login button click
+        btnLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), Login.class);
+            startActivity(intent);
         });
 
         // Initialize runnables for debouncing
@@ -464,184 +168,83 @@ private void displayUserInfo(UserDetailResponse user) {
                 searchHandler.removeCallbacks(searchRunnable);
                 searchHandler.post(searchRunnable); // Immediate search on submit
                 return true;
-            }            
+            }
 
             @Override
             public boolean onQueryTextChange(String newText) {
                 currentQuery = newText.trim();
                 searchHandler.removeCallbacks(searchRunnable);
-                
-                // If search is cleared, reset pagination and fetch all products
-                if (currentQuery.isEmpty()) {
-                    currentPage = 1;
-                    isLastPage = false;
-                    searchHandler.post(() -> {
-                        if (isAdded() && getContext() != null) {
-                            fetchProducts(currentPage, pageSize, "id", "asc", "");
-                        }
-                    });                } else {
-                    searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
-                }
+                searchHandler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY_MS);
                 return true;
             }
         });
 
-        // Get userId from JWT token for cart operations
-        String token = TokenManager.getToken(getContext());
-        if (token != null && !JwtUtils.isTokenExpired(token)) {
-            String userIdStr = JwtUtils.getUserIdFromToken(token);
-            if (userIdStr != null && !userIdStr.trim().isEmpty()) {
-                try {
-                    userId = Integer.parseInt(userIdStr);
-                } catch (NumberFormatException e) {
-                    Log.w(TAG, "Could not parse userId from token: " + userIdStr, e);
-                    userId = null;
-                }
-            }
-        }
-        
-        // Start loading products
-        fetchProducts(currentPage, pageSize, "id", "asc", "");
-    }    /**
-     * Load user information specifically for cart functionality and user ID
-     * This works alongside the top bar authentication but focuses on getting userId
-     */
-    private void loadUserInfoForCart() {
-        // Try to get user ID from JWT token first
-        String token = TokenManager.getToken(getContext());
-        if (token != null && !JwtUtils.isTokenExpired(token)) {
-            String userIdFromToken = JwtUtils.getUserIdFromToken(token);
-            if (userIdFromToken != null) {
-                try {
-                    userId = Integer.parseInt(userIdFromToken);
-                    Log.d(TAG, "User ID loaded from JWT: " + userId);
-                    return;
-                } catch (NumberFormatException e) {
-                    Log.w(TAG, "Cannot parse user ID from JWT: " + userIdFromToken);
-                }
-            }
-        }
-        
-        // Fallback: If no valid token or user ID, clear user ID
-        userId = null;
-        Log.d(TAG, "No valid token available for user info fetching");
-    }
+        // Handle search clear
+        searchView.setOnCloseListener(() -> {
+            currentQuery = "";
+            currentPage = 1;
+            isLastPage = false;
+            fetchProducts(currentPage, pageSize, "id", "asc", "");
+            return false;
+        });
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Refresh authentication state when fragment becomes visible
-        // This handles cases where user logs in/out from other activities
-        setupTopBar();
-    }
-
-    /**
-     * Public method to refresh the authentication state
-     * Can be called from parent activity when authentication state changes
-     */
-    public void refreshAuthenticationState() {
-        setupTopBar();
-    }    /**
-     * Debug method to log TokenManager information
-     * Useful for development and debugging JWT token integration
-     */
-    private void debugSessionInfo() {
-        if (getContext() == null) {
-            Log.d(TAG, "Token Debug: Context is null");
-            return;
-        }
-        
+        // Fetch user info for greeting and avatar
         String token = TokenManager.getToken(getContext());
-        boolean hasToken = TokenManager.hasToken(getContext());
-        boolean isExpired = token != null ? JwtUtils.isTokenExpired(token) : true;
-        
-        Log.d(TAG, "Token Debug: Has token: " + hasToken);
-        Log.d(TAG, "Token Debug: Is token expired: " + isExpired);
-        
-        if (token != null && !isExpired) {
-            String email = JwtUtils.getEmailFromToken(token);
-            String fullName = JwtUtils.getFullNameFromToken(token);
-            String role = JwtUtils.getRoleFromToken(token);
-            String userId = JwtUtils.getUserIdFromToken(token);
-            
-            Log.d(TAG, "Token Debug: Email: " + email);
-            Log.d(TAG, "Token Debug: Full Name: " + fullName);
-            Log.d(TAG, "Token Debug: Role: " + role);
-            Log.d(TAG, "Token Debug: User ID: " + userId);
-            
-            // Calculate time remaining from JWT expiration
-            long expiration = JwtUtils.getExpirationFromToken(token);
-            if (expiration > 0) {
-                long currentTime = System.currentTimeMillis() / 1000;
-                long timeLeft = expiration - currentTime;
-                Log.d(TAG, "Token Debug: Time left (seconds): " + Math.max(0, timeLeft));
-            } else {
-                Log.d(TAG, "Token Debug: No expiration information available");
-            }
+        if (token != null) {
+            // Show cart icon, hide login button
+            imgCart.setVisibility(View.VISIBLE);
+            btnLogin.setVisibility(View.GONE);
+
+            UserApiService userApiService = ApiClient.getUserApiService();
+            userApiService.getMe(token).enqueue(new Callback<UserResponse>() {
+                @Override
+                public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+                    if (isAdded() && getContext() != null) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            userId = response.body().getUserId();
+                            String fullName = response.body().getFullName();
+                            tvFullName.setText(fullName != null ? fullName : getString(R.string.guest));
+
+                            String avatarUrl = response.body().getAvatarUrl();
+                            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                                Glide.with(HomeFragment.this)
+                                        .load(avatarUrl)
+                                        .placeholder(R.drawable.ic_user_placeholder)
+                                        .error(R.drawable.ic_user_placeholder)
+                                        .circleCrop()
+                                        .into(imgUserAvatar);
+                            } else {
+                                imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
+                            }
+                        } else {
+                            tvFullName.setText(R.string.guest);
+                            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
+                            Toast.makeText(getContext(), "Không thể lấy thông tin người dùng", Toast.LENGTH_SHORT).show();
+                        }
+                        fetchProducts(currentPage, pageSize, "id", "asc", "");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<UserResponse> call, Throwable t) {
+                    if (isAdded() && getContext() != null) {
+                        tvFullName.setText(R.string.guest);
+                        imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
+                        Toast.makeText(getContext(), getString(R.string.network_error), Toast.LENGTH_SHORT).show();
+                        fetchProducts(currentPage, pageSize, "id", "asc", "");
+                    }
+                }
+            });
         } else {
-            Log.d(TAG, "Token Debug: No valid token available");
+            // Show login button, hide cart icon
+            imgCart.setVisibility(View.GONE);
+            btnLogin.setVisibility(View.VISIBLE);
+            tvFullName.setText(R.string.guest);
+            imgUserAvatar.setImageResource(R.drawable.ic_user_placeholder);
+            fetchProducts(currentPage, pageSize, "id", "asc", "");
         }
-    }
-    
-    /**
-     * Debug method to log JWT token information
-     * Useful for development and debugging JWT integration
-     */
-    private void debugJWTTokenInfo() {
-        String token = TokenManager.getToken(getContext());
-        if (token == null) {
-            Log.d(TAG, "JWT Debug: No token found");
-            return;
-        }
-        
-        Log.d(TAG, "JWT Debug: Token exists: true");
-        Log.d(TAG, "JWT Debug: Token expired: " + JwtUtils.isTokenExpired(token));
-        Log.d(TAG, "JWT Debug: Valid format: " + JwtUtils.isValidTokenFormat(token));
-        
-        if (!JwtUtils.isTokenExpired(token)) {
-            Log.d(TAG, "JWT Debug: User ID: " + JwtUtils.getUserIdFromToken(token));
-            Log.d(TAG, "JWT Debug: Email: " + JwtUtils.getEmailFromToken(token));
-            Log.d(TAG, "JWT Debug: Full Name: " + JwtUtils.getFullNameFromToken(token));
-            Log.d(TAG, "JWT Debug: Role: " + JwtUtils.getRoleFromToken(token));
-            Log.d(TAG, "JWT Debug: Expiration: " + JwtUtils.getExpirationFromToken(token));
-        }
-    }
-      /**
-     * Enhanced logout method with broadcast support
-     * Clears the session and switches to guest mode
-     */
-    public void logout() {
-        if (getContext() != null) {
-            AuthUtils.logoutWithBroadcast(getContext(), false, null); // Don't show toast or navigate
-            Log.d(TAG, "User logged out, session cleared");
-            showGuestMode();
-        }
-    }
-    
-    /**
-     * Handle logout from broadcast receiver
-     */
-    public void handleLogoutBroadcast() {
-        Log.d(TAG, "Logout broadcast received, switching to guest mode");
-        showGuestMode();
-    }
-      /**
-     * Method to check if user is currently authenticated
-     * @return true if user has valid token, false otherwise
-     */
-    public boolean isUserAuthenticated() {
-        return AuthUtils.isUserAuthenticated(getContext());
-    }
-    
-    /**
-     * Public method to enable/disable debug logging
-     * Useful for development and testing
-     */
-    public void enableDebugMode(boolean enable) {
-        if (enable) {
-            debugSessionInfo();
-            debugJWTTokenInfo();
-        }
+
+        return view;
     }
 
     private void fetchProducts(int page, int size, String sort, String direction, String query) {

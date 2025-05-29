@@ -23,6 +23,7 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 
 import hcmute.edu.vn.chatbot_ec.R;
 import hcmute.edu.vn.chatbot_ec.activity.AddressActivity;
+import hcmute.edu.vn.chatbot_ec.activity.Login;
 import hcmute.edu.vn.chatbot_ec.activity.OrderActivity;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
@@ -46,8 +47,10 @@ public class UserFragment extends Fragment {
     private MaterialButton buttonEditProfile;
     private ExtendedFloatingActionButton fabAddress;
     private ExtendedFloatingActionButton fabOrderHistory;
-    private MaterialButton buttonLogout;      private ProgressBar progressBar;
+    private MaterialButton buttonLogout;
+    private ProgressBar progressBar;
     private UserApiService userApiService;
+    private Integer userId;
     
     // Broadcast receiver for logout events
     private BroadcastReceiver logoutReceiver = new BroadcastReceiver() {        @Override
@@ -70,7 +73,8 @@ public class UserFragment extends Fragment {
         textVerifiedStatus = view.findViewById(R.id.profile_verified_status);
         buttonEditProfile = view.findViewById(R.id.button_edit_profile);
         fabAddress = view.findViewById(R.id.fab_address);
-        fabOrderHistory = view.findViewById(R.id.fab_order_history);        buttonLogout = view.findViewById(R.id.button_logout);
+        fabOrderHistory = view.findViewById(R.id.fab_order_history);
+        buttonLogout = view.findViewById(R.id.button_logout);
         progressBar = view.findViewById(R.id.progress_bar);
         userApiService = ApiClient.getUserApiService();        // Show loading state
         progressBar.setVisibility(View.VISIBLE);
@@ -130,8 +134,8 @@ public class UserFragment extends Fragment {
                 if (isAdded() && getContext() != null) {
                     progressBar.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
-                        // Directly display user info from the UserResponse
-                        //displayUserInfoFromUserResponse(response.body());
+                        userId = response.body().getUserId();
+                        fetchUserDetails(userId);
                     } else if (response.code() == 401) {
                         // Handle unauthorized response
                         AuthUtils.handleUnauthorizedResponse(getContext());
@@ -155,7 +159,7 @@ public class UserFragment extends Fragment {
     
     @Override
     public void onStart() {
-        super.onStart();        // Register for logout broadcasts
+        super.onStart();
         if (getContext() != null) {
             IntentFilter filter = new IntentFilter(AuthenticationService.ACTION_USER_LOGOUT);
             ContextCompat.registerReceiver(getContext(), logoutReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
@@ -299,9 +303,9 @@ public class UserFragment extends Fragment {
         buttonEditProfile.setText("Đăng nhập");
         buttonEditProfile.setOnClickListener(v -> {
             if (isAdded() && getContext() != null) {
-                // Navigate to login - you can implement this based on your navigation structure
                 Toast.makeText(getContext(), "Chuyển đến màn hình đăng nhập", Toast.LENGTH_SHORT).show();
-                // TODO: Navigate to LoginActivity
+                Intent intent = new Intent(getContext(), Login.class);
+                startActivity(intent);
             }
         });
     }
