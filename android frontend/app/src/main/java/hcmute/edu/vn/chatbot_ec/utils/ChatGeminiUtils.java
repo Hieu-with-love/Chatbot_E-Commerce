@@ -102,7 +102,7 @@ public class ChatGeminiUtils {
             case "search_product":
                 return "/api/v1/chatbot/process-product";
             case "check_order":
-                return "/api/v1/chatbot/check-order";
+                return "/api/v1/chatbot/check-orders/";
             case "cancel_order":
                 return "/api/v1/chatbot/cancel-order";
             default:
