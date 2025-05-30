@@ -2,10 +2,7 @@ package android.hcmute.edu.vn.chatbot_spring.controller;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.*;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.OrderResponse;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.ResponseData;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.*;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 import android.hcmute.edu.vn.chatbot_spring.service.ChatbotService;
 import android.hcmute.edu.vn.chatbot_spring.service.OrderService;
@@ -45,6 +42,16 @@ public class ChatbotController {
                         .data(orders)
                         .build()
         );
+    }
+
+    @PostMapping("/process-consultant")
+    public ResponseEntity<?> searchProducts(@RequestBody ProductConsultantReq req) {
+        try{
+            List<Product> products = productService.searchProductsBySize(req);
+            return ResponseEntity.ok(products);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
     
     @PostMapping("/start")

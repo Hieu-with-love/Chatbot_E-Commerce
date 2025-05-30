@@ -11,6 +11,7 @@ import hcmute.edu.vn.chatbot_ec.response.ChatSessionResponse;
 import hcmute.edu.vn.chatbot_ec.response.MessageResponse;
 import hcmute.edu.vn.chatbot_ec.request.ChatSessionStartRequest;
 import hcmute.edu.vn.chatbot_ec.request.SummaryRequest;
+import hcmute.edu.vn.chatbot_ec.response.OrderResponse;
 import hcmute.edu.vn.chatbot_ec.response.ResponseData;
 import kotlin.ParameterName;
 import retrofit2.Call;
@@ -56,4 +57,7 @@ public interface ChatbotApiService {
     Call<ResponseData<ChatSessionResponse>> updateSummaryChatSession(
             @Path("sessionId") Integer sessionId,
             @Body SummaryRequest request);
+
+    @GET("/api/v1/chatbot/check-order/{userId}")
+    Call<ResponseData<OrderResponse>> getUserOrders();
 }

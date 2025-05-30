@@ -101,8 +101,10 @@ public class ChatGeminiUtils {
         switch (intentType) {
             case "search_product":
                 return "/api/v1/chatbot/process-product";
+            case "product_consultant":
+                return "/api/v1/chatbot/process-consultant";
             case "check_order":
-                return "/api/v1/chatbot/check-order";
+                return "/api/v1/chatbot/check-orders/";
             case "cancel_order":
                 return "/api/v1/chatbot/cancel-order";
             default:

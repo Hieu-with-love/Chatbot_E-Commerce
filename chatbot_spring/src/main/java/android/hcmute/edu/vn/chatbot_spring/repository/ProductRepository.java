@@ -14,13 +14,19 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     @Query("SELECT p FROM Product p WHERE " +
-            "(:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%'))) AND " +
+            "(:productName IS NULL OR LOWER(p.nameUnsigned) LIKE LOWER(CONCAT('%', :productName, '%'))) AND " +
             "(:categoryName IS NULL OR LOWER(p.category.name) LIKE LOWER(CONCAT('%', :categoryName, '%'))) AND " +
             "(:price IS NULL OR p.price <= :price)")
     List<Product> findByCriteria(@Param("productName") String productName,
-                                 @Param("description") String description,
                                  @Param("categoryName") String categoryName,
-                                 @Param("price")BigDecimal price);
+                                 @Param("price") BigDecimal price);
+
+
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:productName IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :productName, '%'))) AND " +
+            "(:size IS NULL OR LOWER(p.size) LIKE LOWER(CONCAT('%', :size, '%')))")
+    List<Product> findProductBySize(@Param("productName") String productName,
+                                    @Param("size") String size);
 
     Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 }
