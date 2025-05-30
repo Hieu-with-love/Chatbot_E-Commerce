@@ -24,6 +24,9 @@ public class Product {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "name_unsigned", nullable = false)
+    private String nameUnsigned;
+
     @Column(name = "description", nullable = false)
     private String description;
 
