@@ -3,6 +3,7 @@ package android.hcmute.edu.vn.chatbot_spring.service.impl;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.PageResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductConsultantReq;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductImageResponse;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductResponse;
 import android.hcmute.edu.vn.chatbot_spring.exception.ResourceNotFoundException;
@@ -73,7 +74,15 @@ public class ProductServiceImpl implements ProductService {
         String description = request.getDescription() != null ? request.getDescription() : "";
         BigDecimal price = request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO;
 
-        return productRepository.findByCriteria(productName, description, categoryName, price);
+        return productRepository.findByCriteria(productName, categoryName, price);
+    }
+
+    @Override
+    public List<Product> searchProductsBySize(ProductConsultantReq req) {
+        String productName = req.getProductName() != null ? req.getProductName() : "";
+        String size = req.getSize() != null ? req.getSize() : "";
+
+        return productRepository.findProductBySize(productName, size);
     }
 
     @Override

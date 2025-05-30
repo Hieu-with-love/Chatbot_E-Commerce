@@ -2,11 +2,10 @@ package android.hcmute.edu.vn.chatbot_spring.controller;
 
 import android.hcmute.edu.vn.chatbot_spring.dto.ChatSessionDto;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.*;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.ChatSessionResponse;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.MessageResponse;
-import android.hcmute.edu.vn.chatbot_spring.dto.response.ResponseData;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.*;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 import android.hcmute.edu.vn.chatbot_spring.service.ChatbotService;
+import android.hcmute.edu.vn.chatbot_spring.service.OrderService;
 import android.hcmute.edu.vn.chatbot_spring.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,11 +20,34 @@ import java.util.List;
 public class ChatbotController {
     private final ProductService productService;
     private final ChatbotService chatbotService;
+    private final OrderService orderService;
 
     @PostMapping("/process-product")
     public ResponseEntity<?> searchProducts(@RequestBody ProductSearchRequest req) {
         try{
             List<Product> products = productService.searchProducts(req);
+            return ResponseEntity.ok(products);
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/check-orders/{userId}")
+    public ResponseEntity<?> checkUserOrders(@PathVariable("userId") Integer userId) {
+        List<OrderResponse> orders = orderService.getOrdersByUserId(userId);
+        return ResponseEntity.ok(
+                ResponseData.builder()
+                        .status(200)
+                        .message("Get all orders of user successfully")
+                        .data(orders)
+                        .build()
+        );
+    }
+
+    @PostMapping("/process-consultant")
+    public ResponseEntity<?> searchProducts(@RequestBody ProductConsultantReq req) {
+        try{
+            List<Product> products = productService.searchProductsBySize(req);
             return ResponseEntity.ok(products);
         }catch (Exception e){
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());

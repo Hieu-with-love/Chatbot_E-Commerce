@@ -3,6 +3,7 @@ package android.hcmute.edu.vn.chatbot_spring.service;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.CreateProductRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.request.ProductSearchRequest;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.PageResponse;
+import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductConsultantReq;
 import android.hcmute.edu.vn.chatbot_spring.dto.response.ProductResponse;
 import android.hcmute.edu.vn.chatbot_spring.model.Product;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ public interface ProductService {
     Product createProduct(CreateProductRequest req, MultipartFile imageFile);
     void createAllProducts(List<CreateProductRequest> reqs);
     List<Product> searchProducts(ProductSearchRequest request);
+    List<Product> searchProductsBySize(ProductConsultantReq req);
     Product updateProduct(int id, CreateProductRequest req, MultipartFile imageFile);
     PageResponse<ProductResponse> getAllProducts(int page, int size, String sort, String direction);
     void deleteProduct(int id);
