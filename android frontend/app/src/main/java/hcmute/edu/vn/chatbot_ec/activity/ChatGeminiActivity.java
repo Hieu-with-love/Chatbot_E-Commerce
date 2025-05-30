@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +38,7 @@ import hcmute.edu.vn.chatbot_ec.config.BuildConfig;
 import hcmute.edu.vn.chatbot_ec.enums.SENDER;
 import hcmute.edu.vn.chatbot_ec.helper.GeminiHelper;
 import hcmute.edu.vn.chatbot_ec.model.Message;
+import hcmute.edu.vn.chatbot_ec.model.Product;
 import hcmute.edu.vn.chatbot_ec.network.ApiClient;
 import hcmute.edu.vn.chatbot_ec.network.ChatbotApiService;
 import hcmute.edu.vn.chatbot_ec.network.UserApiService;
@@ -52,6 +54,7 @@ import hcmute.edu.vn.chatbot_ec.utils.MyJsonUtils;
 import hcmute.edu.vn.chatbot_ec.utils.TokenManager;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -258,10 +261,17 @@ public class ChatGeminiActivity extends AppCompatActivity {
     }
 
     private void generateUserIntent(String originalPrompt, IntentCallback callback) {
-        String promptTemplate = ChatGeminiUtils.readFileFromAssets(getApplicationContext(), R.raw.intent_prompt);
-        String structuredPrompt = String.format(promptTemplate, originalPrompt);
+        String targetPrompt = originalPrompt;
 
-        Log.d("Generate intent prompt", structuredPrompt);
+        if (summary!=null){
+            String promptTemplate = ChatGeminiUtils.readFileFromAssets(this, R.raw.summary_prompt);
+            String targetSummary = String.format(promptTemplate, originalPrompt + " and required before  " + summary);
+            Log.d("Summary not null", targetSummary);
+        }
+
+        String promptTemplateS = ChatGeminiUtils.readFileFromAssets(this, R.raw.intent_prompt);
+        String structuredPrompt = String.format(promptTemplateS, targetPrompt);
+
 
         GeminiHelper.generateResponse(
                 structuredPrompt,
@@ -326,10 +336,12 @@ public class ChatGeminiActivity extends AppCompatActivity {
             case "search_product":
                 handleSearchProduct(originalPrompt);
                 break;
+            case "product_consultant":
+                handleProductConsultant(originalPrompt);
+                break;
             case "undetect_detail":
                 handleUndetectDetail();
                 break;
-
             case "check_order":
                 handleCheckOrder(originalPrompt);
                 break;
@@ -386,7 +398,7 @@ public class ChatGeminiActivity extends AppCompatActivity {
 
     private void handleUndetectDetail() {
     }
-
+    
     private void handleProductOverview(String originalPrompt) {
         String structuredPrompt = ChatGeminiUtils.structuredSummary(getApplicationContext(),
                 originalPrompt,
@@ -461,6 +473,102 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     return kotlin.Unit.INSTANCE;
                 }
         );
+    }
+
+    private void handleProductConsultant(String originalPrompt) {
+        showLoading(true);
+        extractProductConsultantJsonThenSendToBackend(originalPrompt);
+    }
+
+    private void extractProductConsultantJsonThenSendToBackend(String originalPrompt) {
+        String targetPrompt = originalPrompt;
+
+        if (summary!=null){
+            String promptTemplate = ChatGeminiUtils.readFileFromAssets(this, R.raw.summary_prompt);
+            String targetSummary = String.format(promptTemplate, originalPrompt + " and required before  " + summary);
+            Log.d("Summary not null", targetSummary);
+        }
+
+        String promptTemplateS = ChatGeminiUtils.readFileFromAssets(this, R.raw.product_consultant);
+        String structuredPrompt = String.format(promptTemplateS, targetPrompt);
+
+        Log.d("Generate summary prompt", structuredPrompt);
+
+        GeminiHelper.generateResponse(
+                structuredPrompt,
+                BuildConfig.API_KEY,
+                BuildConfig.MODEL_NAME,
+                (jsonResponse, error) -> {
+                    runOnUiThread(() -> {
+                        if (error != null) {
+                            Toast.makeText(this, "Lỗi giai đoạn 1: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e("GeminiAPI", "Error generating JSON response", error);
+                            showLoading(false);
+                        } else if (jsonResponse != null) {
+                            Log.d("GeminiAPI", "JSON Response from Gemini: " + jsonResponse);
+                            String cleanedJson = MyJsonUtils.removeMarkdownJson(jsonResponse);
+                            sendToProductConsultantSpringBackend(cleanedJson ,originalPrompt, "check_order");
+                        }
+                    });
+                    return kotlin.Unit.INSTANCE; // Explicitly return Unit to fix the lambda compatibility issue
+                }
+        );
+    }
+
+    private void sendToProductConsultantSpringBackend(String jsonResponse, String originalPrompt, String intentType) {
+        try {
+            Log.d("SpringBackend", "Sending request to backend with intent: " + intentType);
+
+            // Configure OkHttpClient with timeouts
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .build();
+
+            // Prepare request body with proper content type
+            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+            RequestBody body = RequestBody.create(jsonResponse, JSON);
+            String endpoint = ChatGeminiUtils.getEndpointByIntent(intentType);
+            String baseUrl = ChatGeminiUtils.getBaseUrl();
+
+            Log.d("SpringBackend", "Using " + (ChatGeminiUtils.isEmulator() ? "emulator" : "physical device") + " URL: " + baseUrl);
+
+            // Build request with headers
+            Request request = new Request.Builder()
+                    .url(baseUrl + endpoint)
+                    .post(body)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build();
+
+            Log.d("SpringBackend", "Request URL: " + request.url());
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> {
+                        showLoading(false);
+                        Toast.makeText(ChatGeminiActivity.this, "Lỗi kết nối backend: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Log.e("SpringBackend", "Error connecting to backend", e);
+                        // Add user-friendly error message to chat
+                        addMessageToChat("Xin lỗi, tôi đang gặp vấn đề kết nối. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    handleSearchBackendResponse(response, originalPrompt, intentType);
+                }
+            });
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                showLoading(false);
+                Toast.makeText(this, "Lỗi xử lý: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("SpringBackend", "Processing error", e);
+                addMessageToChat("Xin lỗi, đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.", Message.SENT_BY_BOT);
+            });
+        }
     }
 
     private void handleCheckOrder(String originalPrompt) {
@@ -1050,7 +1158,9 @@ public class ChatGeminiActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             }
         });
-    }    /**
+    }
+
+    /**
      * Creates a summary of the current chat session and sends it to the backend
      * This method is kept for backward compatibility but now uses a simple message
      */
